@@ -1,0 +1,7 @@
+FROM ARG_FROM
+
+MAINTAINER Thingful <info@thingful.net>
+
+WORKDIR ARG_WORKDIR
+
+CMD ["/bin/sh"]
