@@ -18,3 +18,23 @@ services:
     ports:
       - "8080:8080"
     command: /go/bin/ARG_BIN server
+    environment:
+      - PGHOST=postgres
+      - PGPASSWORD=password
+      - PGUSER=iotstore
+      - DATABASE_URL=postgres://iotstore:password@postgres/iotstore_development
+
+  postgres:
+    image: postgres:10-alpine
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_vol:/var/lib/postgresql/data
+    restart: always
+    environment:
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_USER=iotstore
+      - POSTGRES_DB=postgres
+
+volumes:
+  postgres_vol:
