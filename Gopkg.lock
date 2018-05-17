@@ -2,6 +2,16 @@
 
 
 [[projects]]
+  name = "github.com/golang-migrate/migrate"
+  packages = [
+    ".",
+    "database",
+    "source"
+  ]
+  revision = "22f249514de9aa3f8a720a7cabbdd45d294f83a1"
+  version = "v3.2.0"
+
+[[projects]]
   name = "github.com/golang/protobuf"
   packages = [
     "jsonpb",
@@ -58,6 +68,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "65d8dd16e58e198de3a11ca5ccfe2e3bc105d23dd155d2bc8e10eab81e361cef"
+  inputs-digest = "ca7f4ec378ae4a61ffb78b8e6c723689675250915e7bcc0c50dc2d1707939336"
   solver-name = "gps-cdcl"
   solver-version = 1
