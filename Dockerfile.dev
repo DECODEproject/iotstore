@@ -2,6 +2,10 @@ FROM ARG_FROM
 
 MAINTAINER Thingful <info@thingful.net>
 
+RUN apk add --update \
+    postgresql-client && \
+  rm -rf /var/cache/apk/*
+
 WORKDIR ARG_WORKDIR
 
 CMD ["/bin/sh"]
