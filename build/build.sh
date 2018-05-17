@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# Script used when compiling binary during build phase
+
 set -o errexit
 set -o nounset
 if set -o | grep -q "pipefail"; then

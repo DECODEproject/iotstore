@@ -59,9 +59,10 @@ all-push: $(addprefix push-, $(ALL_ARCH))
 
 build: bin/$(ARCH)/$(BIN) ## Build our binary inside a container
 
-bin/$(ARCH)/$(BIN): build-dirs .compose
+bin/$(ARCH)/$(BIN): .build-dirs .compose
 	@echo "--> Building in the containerized environment"
-	@docker-compose  -f .docker-compose-$(ARCH).yml \
+	@docker-compose -f .docker-compose-$(ARCH).yml build
+	@docker-compose -f .docker-compose-$(ARCH).yml \
 		run \
 		--rm \
 		-u $$(id -u):$$(id -g) \
@@ -76,21 +77,24 @@ bin/$(ARCH)/$(BIN): build-dirs .compose
 		"
 
 shell: .shell-$(ARCH) ## Open shell in containerized environment
-.shell-$(ARCH): build-dirs .compose
+.shell-$(ARCH): .build-dirs .compose
 	@echo "--> Launching shell in the containerized environment"
 	@docker-compose -f .docker-compose-$(ARCH).yml \
 		run \
 		--rm \
 		-u "$$(id -u):$$(id -g)" \
 		app \
-		/bin/sh $(CMD)
+		/bin/sh -c " \
+			./build/dev.sh\
+		"
 
-test: build-dirs .compose
+test: .build-dirs .compose
 	@echo "--> Running tests in the containerized environment"
 	@docker-compose -f .docker-compose-$(ARCH).yml \
 		run \
 		--rm \
 		-u $$(id -u):$$(id -g) \
+		-e "DATABASE_URL=postgres://iotstore:password@postgres/iotstore_test" \
 		app \
 		/bin/sh -c " \
 			./build/test.sh $(SRC_DIRS) \
@@ -125,8 +129,8 @@ container-name:
 		-e 's|ARG_BIN|$(BIN)|g' \
 		docker-compose.yml > .docker-compose-$(ARCH).yml
 
-.PHONY: build-dirs
-build-dirs: ## creates build directories
+.PHONY: .build-dirs
+.build-dirs: ## creates build directories
 	@mkdir -p bin/$(ARCH)
 	@mkdir -p .go/src/$(PKG) .go/pkg .go/bin .go/std/$(ARCH) .cache/go-build .coverage
 
