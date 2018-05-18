@@ -26,6 +26,11 @@ func (d *DB) Start() error {
 		return err
 	}
 
+	err = MigrateUp(d.db)
+	if err != nil {
+		return err
+	}
+
 	d.db = db
 
 	return nil

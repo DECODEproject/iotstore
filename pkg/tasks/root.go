@@ -11,10 +11,18 @@ import (
 
 var rootCmd = &cobra.Command{
 	Use:   version.BinaryName,
-	Short: "A tool to do something",
-	Long: `An app to do something built by Thingful.
+	Short: "Encrypted datastore for the DECODE IoT Pilot",
+	Long: `This tool is an implementation of the encrypted datastore interface being
+developed as part of the IoT Pilot for DECODE (https://decodeproject.eu/).
 
-This description spans multiple lines.`,
+This component exposes a simple RPC API implemented using a library called
+Twirp, that provides either a JSON or Protocol Buffer API over HTTP 1.1.
+
+Data is currently persisted to PostgreSQL, and for the purposes of
+demonstration we assume that we are able to trust callers to service. All
+data stored within the datastore is encrypted for a specific target client,
+meaning this datastore has no visibility of the data being persisted.
+`,
 	Version: version.VersionString(),
 }
 
