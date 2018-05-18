@@ -7,7 +7,7 @@ import (
 )
 
 func TestVersionString(t *testing.T) {
-	expected := "UNKNOWN (linux/amd64). Build date: UNKNOWN"
+	expected := "UNKNOWN (linux/amd64). build date: UNKNOWN"
 	got := version.VersionString()
 
 	if got != expected {

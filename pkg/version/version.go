@@ -24,5 +24,5 @@ var BuildDate = unknown
 // VersionString returns a formatted version string suitable for displaying to
 // the user. This is a verbose version string including build date.
 func VersionString() string {
-	return fmt.Sprintf("%s (%s/%s). Build date: %s", Version, runtime.GOOS, runtime.GOARCH, BuildDate)
+	return fmt.Sprintf("%s (%s/%s). build date: %s", Version, runtime.GOOS, runtime.GOARCH, BuildDate)
 }
