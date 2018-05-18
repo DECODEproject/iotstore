@@ -61,11 +61,12 @@ build: bin/$(ARCH)/$(BIN) ## Build our binary inside a container
 
 bin/$(ARCH)/$(BIN): .build-dirs .compose
 	@echo "--> Building in the containerized environment"
-	@docker-compose -f .docker-compose-$(ARCH).yml build
+	# @docker-compose -f .docker-compose-$(ARCH).yml build
 	@docker-compose -f .docker-compose-$(ARCH).yml \
 		run \
 		--rm \
 		-u $$(id -u):$$(id -g) \
+		--no-deps \
 		app \
 		/bin/sh -c " \
 			ARCH=$(ARCH) \
@@ -88,7 +89,8 @@ shell: .shell-$(ARCH) ## Open shell in containerized environment
 			./build/dev.sh\
 		"
 
-test: .build-dirs .compose
+.PHONY: test
+test: .build-dirs .compose ## Run tests in the containerized environment
 	@echo "--> Running tests in the containerized environment"
 	@docker-compose -f .docker-compose-$(ARCH).yml \
 		run \
@@ -102,7 +104,7 @@ test: .build-dirs .compose
 
 DOTFILE_IMAGE = $(subst :,_,$(subst /,_,$(IMAGE))-$(VERSION))
 
-container: .container-$(DOTFILE_IMAGE) container-name
+container: .container-$(DOTFILE_IMAGE) container-name ## Create delivery container image
 .container-$(DOTFILE_IMAGE): bin/$(ARCH)/$(BIN) Dockerfile.in
 	@sed \
 		-e 's|ARG_BIN|$(BIN)|g' \
@@ -112,10 +114,12 @@ container: .container-$(DOTFILE_IMAGE) container-name
 	@docker build -t $(IMAGE):$(VERSION) -f .dockerfile-in-$(ARCH) .
 	@docker images -q $(IMAGE):$(VERSION) > $@
 
-container-name:
+.PHONY: container-name
+container-name: ## Show the name of the delivery container
 	@echo "  container: $(IMAGE):$(VERSION)"
 
-.compose:
+.PHONY: .compose
+.compose: ## Create environment specific compose file
 	@sed \
 		-e 's|ARG_FROM|$(BUILD_IMAGE)|g' \
 		-e 's|ARG_WORKDIR|/go/src/$(PKG)|g' \
@@ -148,18 +152,23 @@ push: .push-$(DOTFILE_IMAGE) push-name
 push-name:
 	@echo "  pushed $(IMAGE):$(VERSION)"
 
+.PHONY: start
 start: .compose ## start compose services
 	@docker-compose -f .docker-compose-$(ARCH).yml \
 		up
 
-stop: .compose ## stop compose services
+.PHONY: teardown
+teardown: .compose ## teardown compose services
 	@docker-compose -f .docker-compose-$(ARCH).yml \
 		down -v
 
+.PHONY: clean
 clean: container-clean bin-clean ## remove all artefacts
 
+.PHONY: container-clean
 container-clean: ## clean container artefacts
 	rm -rf .container-* .dockerfile-* .docker-compose-* .push-*
 
+.PHONY: bin-clean
 bin-clean: ## remove generated build artefacts
 	rm -rf .go bin .cache .coverage
