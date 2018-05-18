@@ -6,7 +6,9 @@
   packages = [
     ".",
     "database",
-    "source"
+    "database/postgres",
+    "source",
+    "source/file"
   ]
   revision = "22f249514de9aa3f8a720a7cabbdd45d294f83a1"
   version = "v3.2.0"
@@ -68,6 +70,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "ca7f4ec378ae4a61ffb78b8e6c723689675250915e7bcc0c50dc2d1707939336"
+  inputs-digest = "123f3414af91d117c9a561473d933579b38108b71d5431e3832829b079987de3"
   solver-name = "gps-cdcl"
   solver-version = 1
