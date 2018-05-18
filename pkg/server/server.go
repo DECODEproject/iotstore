@@ -2,12 +2,12 @@ package server
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"time"
 
+	kitlog "github.com/go-kit/kit/log"
 	datastore "github.com/thingful/twirp-datastore-go"
 
 	"github.com/thingful/iotstore/pkg/twirp"
@@ -16,13 +16,14 @@ import (
 // Server is our top level type, contains all other components, is responsible
 // for starting and stopping them in the correct order.
 type Server struct {
-	srv *http.Server
-	ds  *twirp.Datastore
+	srv    *http.Server
+	ds     *twirp.Datastore
+	logger kitlog.Logger
 }
 
 // NewServer returns a new simple HTTP server.
-func NewServer(addr string, connStr string) *Server {
-	ds := twirp.NewDatastore(connStr)
+func NewServer(addr string, connStr string, logger kitlog.Logger) *Server {
+	ds := twirp.NewDatastore(connStr, logger)
 	twirpHandler := datastore.NewDatastoreServer(ds, nil)
 
 	// create our http.Server instance
@@ -33,8 +34,9 @@ func NewServer(addr string, connStr string) *Server {
 
 	// return the instantiated server
 	return &Server{
-		srv: srv,
-		ds:  ds,
+		srv:    srv,
+		ds:     ds,
+		logger: kitlog.With(logger, "module", "server"),
 	}
 }
 
@@ -50,9 +52,10 @@ func (s *Server) Start() error {
 	signal.Notify(stopChan, os.Interrupt)
 
 	go func() {
-		log.Println("Starting server")
+		s.logger.Log("addr", s.srv.Addr, "msg", "starting")
 		if err := s.srv.ListenAndServe(); err != nil {
-			log.Fatal(err)
+			s.logger.Log("err", err)
+			os.Exit(1)
 		}
 	}()
 
@@ -61,7 +64,7 @@ func (s *Server) Start() error {
 }
 
 func (s *Server) Stop() error {
-	log.Println("Stopping server")
+	s.logger.Log("msg", "stopping")
 	ctx, cancelFn := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancelFn()
 

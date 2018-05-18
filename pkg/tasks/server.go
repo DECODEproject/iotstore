@@ -3,6 +3,7 @@ package tasks
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/thingful/iotstore/pkg/logger"
 	"github.com/thingful/iotstore/pkg/server"
 )
 
@@ -15,9 +16,15 @@ func init() {
 
 var serverCmd = &cobra.Command{
 	Use:   "server",
-	Short: "Start server listening for requests",
-	Long: `Starts a simple http server to verify that the process runs
-continuously within the container.`,
+	Short: "Starts datastore listening for requests",
+	Long: `
+Starts our implementation of the DECODE datastore RPC interface, which is
+designed to expose a simple API to store and retrieve encrypted events coming
+from upstream IoT devices.
+
+The server uses Twirp to expose both a JSON API along with a more performant
+Protocol Buffer API. The JSON API is not intended for use other than for
+clients unable to use the Protocol Buffer API.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		addr, err := cmd.Flags().GetString("addr")
 		if err != nil {
@@ -29,10 +36,10 @@ continuously within the container.`,
 			return err
 		}
 
-		s := server.NewServer(addr, datasource)
+		logger := logger.NewLogger()
 
-		s.Start()
+		s := server.NewServer(addr, datasource, logger)
 
-		return nil
+		return s.Start()
 	},
 }

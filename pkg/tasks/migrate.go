@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/thingful/iotstore/pkg/logger"
 	"github.com/thingful/iotstore/pkg/postgres"
 )
 
@@ -36,7 +37,9 @@ var migrateNewCmd = &cobra.Command{
 			return err
 		}
 
-		return postgres.NewMigration(dir, args[0])
+		logger := logger.NewLogger()
+
+		return postgres.NewMigration(dir, args[0], logger)
 	},
 }
 
