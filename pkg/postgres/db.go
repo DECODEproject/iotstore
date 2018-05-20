@@ -1,16 +1,15 @@
 package postgres
 
 import (
-	"database/sql"
-
 	kitlog "github.com/go-kit/kit/log"
+	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 )
 
 type DB struct {
 	connStr string
 	logger  kitlog.Logger
-	db      *sql.DB
+	db      *sqlx.DB
 }
 
 func NewDB(connStr string, logger kitlog.Logger) *DB {
@@ -22,20 +21,24 @@ func NewDB(connStr string, logger kitlog.Logger) *DB {
 	}
 }
 
+func Open(connStr string) (*sqlx.DB, error) {
+	return sqlx.Open("postgres", connStr)
+}
+
 func (d *DB) Start() error {
 	d.logger.Log("msg", "starting postgres")
 
-	db, err := sql.Open("postgres", d.connStr)
-	if err != nil {
-		return err
-	}
-
-	err = MigrateUp(d.db, d.logger)
+	db, err := Open(d.connStr)
 	if err != nil {
 		return err
 	}
 
 	d.db = db
+
+	err = MigrateUp(d.db.DB, d.logger)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
