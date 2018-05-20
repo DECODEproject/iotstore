@@ -10,20 +10,20 @@ import (
 	kitlog "github.com/go-kit/kit/log"
 	datastore "github.com/thingful/twirp-datastore-go"
 
-	"github.com/thingful/iotstore/pkg/twirp"
+	"github.com/thingful/iotstore/pkg/rpc"
 )
 
 // Server is our top level type, contains all other components, is responsible
 // for starting and stopping them in the correct order.
 type Server struct {
 	srv    *http.Server
-	ds     *twirp.Datastore
+	ds     *rpc.Datastore
 	logger kitlog.Logger
 }
 
 // NewServer returns a new simple HTTP server.
 func NewServer(addr string, connStr string, logger kitlog.Logger) *Server {
-	ds := twirp.NewDatastore(connStr, logger)
+	ds := rpc.NewDatastore(connStr, logger)
 	twirpHandler := datastore.NewDatastoreServer(ds, nil)
 
 	// create our http.Server instance
