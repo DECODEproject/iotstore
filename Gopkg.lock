@@ -2,6 +2,12 @@
 
 
 [[projects]]
+  branch = "master"
+  name = "github.com/elgris/sqrl"
+  packages = ["."]
+  revision = "f1d9ecedc98d1483fd102348caa7284a59da9d2f"
+
+[[projects]]
   name = "github.com/go-kit/kit"
   packages = ["log"]
   revision = "ca4112baa34cb55091301bdc13b1420a122b1b9e"
@@ -109,6 +115,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f5690629b69d7a6eba55ed7597fc7d21ba0489eac23f07bd71641b3b16151530"
+  inputs-digest = "2064a20dc6037eb26959a945eeb83c73f95185b43779b09444b0c48e7a5bf1c6"
   solver-name = "gps-cdcl"
   solver-version = 1
