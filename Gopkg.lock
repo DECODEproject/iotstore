@@ -26,7 +26,7 @@
     "database",
     "database/postgres",
     "source",
-    "source/file"
+    "source/go-bindata"
   ]
   revision = "22f249514de9aa3f8a720a7cabbdd45d294f83a1"
   version = "v3.2.0"
@@ -47,6 +47,15 @@
   packages = ["."]
   revision = "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75"
   version = "v1.0"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/jmoiron/sqlx"
+  packages = [
+    ".",
+    "reflectx"
+  ]
+  revision = "2aeb6a910c2b94f2d5eb53d9895d80e27264ec41"
 
 [[projects]]
   branch = "master"
@@ -94,6 +103,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "2c59dffe5a19953949bbd263c05dd052ecad8fa58b8d136f4e635191a5af8433"
+  inputs-digest = "0e14054d47f8bf81fdb634678b94cc59e1913172a5947833d7f4cfce32acb261"
   solver-name = "gps-cdcl"
   solver-version = 1
