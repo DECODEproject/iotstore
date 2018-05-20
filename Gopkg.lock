@@ -73,6 +73,12 @@
   revision = "d34b9ff171c21ad295489235aec8b6626023cd04"
 
 [[projects]]
+  name = "github.com/pkg/errors"
+  packages = ["."]
+  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
+  version = "v0.8.0"
+
+[[projects]]
   name = "github.com/spf13/cobra"
   packages = ["."]
   revision = "a1f051bc3eba734da4772d60e2d677f47cf93ef4"
@@ -103,6 +109,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "0e14054d47f8bf81fdb634678b94cc59e1913172a5947833d7f4cfce32acb261"
+  inputs-digest = "f5690629b69d7a6eba55ed7597fc7d21ba0489eac23f07bd71641b3b16151530"
   solver-name = "gps-cdcl"
   solver-version = 1

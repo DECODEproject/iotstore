@@ -52,3 +52,7 @@
 [[constraint]]
   branch = "master"
   name = "github.com/jmoiron/sqlx"
+
+[[constraint]]
+  name = "github.com/pkg/errors"
+  version = "0.8.0"
