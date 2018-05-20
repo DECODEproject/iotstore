@@ -2,7 +2,6 @@ package postgres
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -12,16 +11,20 @@ import (
 	"github.com/golang-migrate/migrate"
 	"github.com/golang-migrate/migrate/database/postgres"
 	bindata "github.com/golang-migrate/migrate/source/go-bindata"
+	"github.com/pkg/errors"
 
 	"github.com/thingful/iotstore/pkg/migrations"
 )
 
+// MigrateUp attempts to run all up migrations against Postgres. Migrations are
+// loaded from a bindata generated module that is compiled into the binary. It
+// takes as parameters an sql.DB instance, and a logger instance.
 func MigrateUp(db *sql.DB, logger kitlog.Logger) error {
 	logger.Log("msg", "migrating DB up")
 
 	m, err := getMigrator(db, logger)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to create migrator")
 	}
 
 	err = m.Up()
@@ -32,23 +35,30 @@ func MigrateUp(db *sql.DB, logger kitlog.Logger) error {
 	return nil
 }
 
+// MigrateDown attempts to run down migrations against Postgres. It takes as
+// parameters an sql.DB instance, the number of steps to run, and a logger
+// instance. Migrations are loaded from a bindata generated module that is
+// compiled into the binary.
 func MigrateDown(db *sql.DB, steps int, logger kitlog.Logger) error {
 	logger.Log("msg", "migrating DB down", "steps", steps)
 
 	m, err := getMigrator(db, logger)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to create migrator")
 	}
 
 	return m.Steps(-steps)
 }
 
+// MigrateDownAll attempts to run all down migrations against Postgres. It takes
+// as parameters an sql.DB instance, and a logger instance. Migrations are
+// loaded from a bindata generated module that is compiled into the binary.
 func MigrateDownAll(db *sql.DB, logger kitlog.Logger) error {
 	logger.Log("msg", "migrating DB down all")
 
 	m, err := getMigrator(db, logger)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to create migrator")
 	}
 
 	return m.Down()
@@ -69,24 +79,28 @@ func NewMigration(dirName, migrationName string, logger kitlog.Logger) error {
 
 	err := os.MkdirAll(dirName, 0755)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to make directory for migrations")
 	}
 
 	upFile, err := os.Create(filepath.Join(dirName, upFileName))
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to make up migration file")
 	}
 	defer upFile.Close()
 
 	downFile, err := os.Create(filepath.Join(dirName, downFileName))
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to make down migration file")
 	}
 	defer downFile.Close()
 
 	return nil
 }
 
+// getMigrator instantiates and returns a migrate.Migrate instance, which we use
+// to execute migrations against a database. It takes as parameters an sql.DB
+// instance, and a logger. Migration data is loaded from a bindata generated
+// module compiled into the binary.
 func getMigrator(db *sql.DB, logger kitlog.Logger) (*migrate.Migrate, error) {
 	dbDriver, err := postgres.WithInstance(db, &postgres.Config{})
 	if err != nil {
