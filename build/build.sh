@@ -8,9 +8,15 @@ if set -o | grep -q "pipefail"; then
   set -o pipefail
 fi
 
+# export build flags
 export CGO_ENABLED="${CGO_ENABLED:-0}"
 export GOARCH="${ARCH}"
 
+# generate bindata assets
+go generate -x "${PKG}/pkg/migrations/"
+
+# compile our binary using install, the mounted volume ensures we can see it
+# outside the build container
 go install \
     -v \
     -installsuffix "static" \
