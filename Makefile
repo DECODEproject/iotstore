@@ -61,7 +61,7 @@ build: bin/$(ARCH)/$(BIN) ## Build our binary inside a container
 
 bin/$(ARCH)/$(BIN): .build-dirs .compose
 	@echo "--> Building in the containerized environment"
-	# @docker-compose -f .docker-compose-$(ARCH).yml build
+	@docker-compose -f .docker-compose-$(ARCH).yml build
 	@docker-compose -f .docker-compose-$(ARCH).yml \
 		run \
 		--rm \
