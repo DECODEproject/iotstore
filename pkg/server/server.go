@@ -52,7 +52,7 @@ func (s *Server) Start() error {
 	signal.Notify(stopChan, os.Interrupt)
 
 	go func() {
-		s.logger.Log("addr", s.srv.Addr, "msg", "starting")
+		s.logger.Log("listenAddr", s.srv.Addr, "msg", "starting server")
 		if err := s.srv.ListenAndServe(); err != nil {
 			s.logger.Log("err", err)
 			os.Exit(1)
