@@ -15,4 +15,6 @@ if ! psql -tc "SELECT 1" "$DATABASE_URL" >/dev/null 2>&1; then
   psql -c "CREATE DATABASE $DBNAME" postgres >/dev/null 2>&1;
 fi
 
+export IOTSTORE_DATABASE_URL="$DATABASE_URL"
+
 /bin/sh
