@@ -11,7 +11,6 @@ func init() {
 	rootCmd.AddCommand(serverCmd)
 
 	serverCmd.Flags().StringP("addr", "a", "0.0.0.0:8080", "Specify the address to which the server binds")
-	serverCmd.Flags().StringP("datasource", "d", "", "Database connection URL")
 }
 
 var serverCmd = &cobra.Command{
@@ -31,7 +30,7 @@ clients unable to use the Protocol Buffer API.`,
 			return err
 		}
 
-		datasource, err := cmd.Flags().GetString("datasource")
+		datasource, err := GetFromEnv("IOTSTORE_DATABASE_URL")
 		if err != nil {
 			return err
 		}

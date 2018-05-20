@@ -1,8 +1,6 @@
 package tasks
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	"github.com/thingful/iotstore/pkg/logger"
@@ -14,7 +12,9 @@ func init() {
 	migrateCmd.AddCommand(migrateNewCmd)
 	migrateCmd.AddCommand(migrateDownCmd)
 
-	migrateCmd.PersistentFlags().String("dir", "pkg/migrations", "Migrations directory")
+	migrateNewCmd.Flags().String("dir", "pkg/migrations/sql", "The directory into which new migrations should be created")
+	migrateDownCmd.Flags().IntP("steps", "s", 1, "Number of down migrations to run")
+	migrateDownCmd.Flags().Bool("all", false, "Boolean flag that if true runs all down migrations")
 }
 
 var migrateCmd = &cobra.Command{
@@ -30,7 +30,15 @@ to run down migrations.`,
 var migrateNewCmd = &cobra.Command{
 	Use:   "new",
 	Short: "Create a new Postgres migration",
-	Args:  cobra.ExactArgs(1),
+	Long: `This command is a simple helper that creates a pair of matching migration
+files, named correctly within the specified directory. The desired name of
+the migration should be passed via a positional argument after the new
+subcommand.
+
+For example:
+
+    $ iotstore migrate new AddUserTable`,
+	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		dir, err := cmd.Flags().GetString("dir")
 		if err != nil {
@@ -46,9 +54,37 @@ var migrateNewCmd = &cobra.Command{
 var migrateDownCmd = &cobra.Command{
 	Use:   "down",
 	Short: "Run down migrations against Postgres",
+	Long: `This command can be used to rollback migrations executed against postgres. It
+takes as parameters: the number of steps to rollback (default 1), or a
+boolean flag (--all) indicating we should rollback all migrations. The
+default is to simply rollback one migration.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Println("Migrating down")
+		datasource, err := GetFromEnv(DatabaseURLKey)
+		if err != nil {
+			return err
+		}
 
-		return nil
+		steps, err := cmd.Flags().GetInt("steps")
+		if err != nil {
+			return err
+		}
+
+		all, err := cmd.Flags().GetBool("all")
+		if err != nil {
+			return err
+		}
+
+		logger := logger.NewLogger()
+
+		db, err := postgres.Open(datasource)
+		if err != nil {
+			return err
+		}
+
+		if all {
+			return postgres.MigrateDownAll(db.DB, logger)
+		}
+
+		return postgres.MigrateDown(db.DB, steps, logger)
 	},
 }
