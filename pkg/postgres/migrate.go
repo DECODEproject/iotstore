@@ -11,7 +11,9 @@ import (
 	kitlog "github.com/go-kit/kit/log"
 	"github.com/golang-migrate/migrate"
 	"github.com/golang-migrate/migrate/database/postgres"
-	_ "github.com/golang-migrate/migrate/source/file"
+	bindata "github.com/golang-migrate/migrate/source/go-bindata"
+
+	"github.com/thingful/iotstore/pkg/migrations"
 )
 
 func MigrateUp(db *sql.DB, logger kitlog.Logger) error {
@@ -22,11 +24,27 @@ func MigrateUp(db *sql.DB, logger kitlog.Logger) error {
 		return err
 	}
 
-	return m.Up()
+	err = m.Up()
+	if err != migrate.ErrNoChange {
+		return err
+	}
+
+	return nil
 }
 
-func MigrateDown(db *sql.DB, logger kitlog.Logger) error {
-	logger.Log("msg", "migrating DB down")
+func MigrateDown(db *sql.DB, steps int, logger kitlog.Logger) error {
+	logger.Log("msg", "migrating DB down", "steps", steps)
+
+	m, err := getMigrator(db, logger)
+	if err != nil {
+		return err
+	}
+
+	return m.Steps(-steps)
+}
+
+func MigrateDownAll(db *sql.DB, logger kitlog.Logger) error {
+	logger.Log("msg", "migrating DB down all")
 
 	m, err := getMigrator(db, logger)
 	if err != nil {
@@ -44,8 +62,8 @@ func NewMigration(dirName, migrationName string, logger kitlog.Logger) error {
 	}
 
 	migrationID := time.Now().Format("20060102150405") + "_" + migrationName
-	upFileName := fmt.Sprintf("%s_up.sql", migrationID)
-	downFileName := fmt.Sprintf("%s_down.sql", migrationID)
+	upFileName := fmt.Sprintf("%s.up.sql", migrationID)
+	downFileName := fmt.Sprintf("%s.down.sql", migrationID)
 
 	logger.Log("upfile", upFileName, "downfile", downFileName, "directory", dirName, "msg", "creating migration files")
 
@@ -70,28 +88,39 @@ func NewMigration(dirName, migrationName string, logger kitlog.Logger) error {
 }
 
 func getMigrator(db *sql.DB, logger kitlog.Logger) (*migrate.Migrate, error) {
-	driver, err := postgres.WithInstance(db, &postgres.Config{})
+	dbDriver, err := postgres.WithInstance(db, &postgres.Config{})
 	if err != nil {
 		return nil, err
 	}
 
-	m, err := migrate.NewWithDatabaseInstance(
-		"file:///pkg/migrations",
-		"postgres",
-		driver,
+	source := bindata.Resource(migrations.AssetNames(),
+		func(name string) ([]byte, error) {
+			return migrations.Asset(name)
+		},
 	)
 
+	sourceDriver, err := bindata.WithInstance(source)
 	if err != nil {
 		return nil, err
 	}
 
-	la := newLogAdapter(logger, true)
+	migrator, err := migrate.NewWithInstance(
+		"go-bindata",
+		sourceDriver,
+		"postgres",
+		dbDriver,
+	)
+	if err != nil {
+		return nil, err
+	}
 
-	m.Log = la
+	migrator.Log = newLogAdapter(logger, true)
 
-	return m, nil
+	return migrator, nil
 }
 
+// newLogAdapter simply wraps our gokit logger into our logAdapter type which
+// allows it to be used by go-migrate.
 func newLogAdapter(logger kitlog.Logger, verbose bool) migrate.Logger {
 	return &logAdapter{logger: logger, verbose: verbose}
 }
@@ -103,7 +132,8 @@ type logAdapter struct {
 	verbose bool
 }
 
-// Printf is semantically the same as fmt.Printf
+// Printf is semantically the same as fmt.Printf. Here we simply output the
+// result of fmt.Sprintf as the value of a `msg` key.
 func (l *logAdapter) Printf(format string, v ...interface{}) {
 	l.logger.Log("msg", fmt.Sprintf(format, v...))
 }
