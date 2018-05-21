@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -21,15 +22,27 @@ type Server struct {
 	logger kitlog.Logger
 }
 
+// PulseHandler is the simplest possible handler function - used to expose an
+// endpoint which a load balancer can ping to verify that a node is running and
+// accepting connections.
+func PulseHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "ok")
+}
+
 // NewServer returns a new simple HTTP server.
 func NewServer(addr string, connStr string, logger kitlog.Logger) *Server {
 	ds := rpc.NewDatastore(connStr, logger)
 	twirpHandler := datastore.NewDatastoreServer(ds, nil)
 
+	// multiplex twirp handler into a mux with another handler
+	mux := http.NewServeMux()
+	mux.Handle(datastore.DatastorePathPrefix, twirpHandler)
+	mux.HandleFunc("/pulse", PulseHandler)
+
 	// create our http.Server instance
 	srv := &http.Server{
 		Addr:    addr,
-		Handler: twirpHandler,
+		Handler: mux,
 	}
 
 	// return the instantiated server
