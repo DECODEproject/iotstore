@@ -48,6 +48,9 @@
   packages = [
     "jsonpb",
     "proto",
+    "ptypes",
+    "ptypes/any",
+    "ptypes/duration",
     "ptypes/struct",
     "ptypes/timestamp"
   ]
@@ -133,6 +136,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "4fa7aeb0ff4acdeff8b3842ce232febbbd31bf3a53472f9fb9cd2551ad08e8d0"
+  inputs-digest = "9b6e92da187ea3f09606f1ec914b90f7be5c138fb25b8e61d80546d1dfee019f"
   solver-name = "gps-cdcl"
   solver-version = 1
