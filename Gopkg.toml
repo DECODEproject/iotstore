@@ -60,3 +60,7 @@
 [[constraint]]
   branch = "master"
   name = "github.com/elgris/sqrl"
+
+[[constraint]]
+  name = "github.com/stretchr/testify"
+  version = "1.2.1"
