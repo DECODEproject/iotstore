@@ -120,8 +120,8 @@
 [[projects]]
   name = "github.com/thingful/twirp-datastore-go"
   packages = ["."]
-  revision = "52a677c634f9a2cfbe8b761038d86385679eff8a"
-  version = "v0.0.1"
+  revision = "92b6de2de8573ffd078ab41658cadfdd29f69fa2"
+  version = "v0.0.2"
 
 [[projects]]
   name = "github.com/twitchtv/twirp"
@@ -136,6 +136,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "9b6e92da187ea3f09606f1ec914b90f7be5c138fb25b8e61d80546d1dfee019f"
+  inputs-digest = "586775e4f5961185fc1813c436967df6c4f006ffc08f5ca29b62ffdbba7fdd4e"
   solver-name = "gps-cdcl"
   solver-version = 1
