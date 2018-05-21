@@ -1,0 +1,180 @@
+package rpc_test
+
+import (
+	"context"
+	"os"
+	"testing"
+
+	kitlog "github.com/go-kit/kit/log"
+	"github.com/stretchr/testify/assert"
+	datastore "github.com/thingful/twirp-datastore-go"
+
+	"github.com/thingful/iotstore/pkg/postgres"
+	"github.com/thingful/iotstore/pkg/rpc"
+)
+
+// getTestDatastore is a helper function that returns a datastore, and also does
+// some housekeeping to clean the DB by rolling back and reapplying migrations.
+//
+// TODO: not terribly happy with this as an approach. See if we can think of an
+// alternative.
+func getTestDatastore(t *testing.T) *rpc.Datastore {
+	t.Helper()
+
+	logger := kitlog.NewNopLogger()
+	connStr := os.Getenv("IOTSTORE_DATABASE_URL")
+
+	// create datastore
+	ds := rpc.NewDatastore(connStr, logger)
+
+	// start the datastore (this runs all migrations slightly annoyingly)
+	err := ds.Start()
+	if err != nil {
+		t.Fatalf("Error starting datastore: %v", err)
+	}
+
+	err = postgres.MigrateDownAll(ds.DB.DB, logger)
+	if err != nil {
+		t.Fatalf("Error running down migrations: %v", err)
+	}
+
+	err = postgres.MigrateUp(ds.DB.DB, logger)
+	if err != nil {
+		t.Fatalf("Error running down migrations: %v", err)
+	}
+
+	return ds
+}
+
+func TestRoundTrip(t *testing.T) {
+	ds := getTestDatastore(t)
+	defer ds.Stop()
+
+	_, err := ds.WriteData(context.Background(), &datastore.WriteRequest{
+		PublicKey: "123abc",
+		UserUid:   "bob",
+		Data:      []byte("hello world"),
+	})
+	assert.Nil(t, err)
+
+	var count int
+	err = ds.DB.Get(&count, ds.DB.Rebind("SELECT COUNT(*) FROM events WHERE public_key = ?"), "123abc")
+	assert.Nil(t, err)
+	assert.Equal(t, 1, count)
+
+	resp, err := ds.ReadData(context.Background(), &datastore.ReadRequest{
+		PublicKey: "123abc",
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, "123abc", resp.PublicKey)
+	assert.Len(t, resp.Events, 1)
+	assert.Equal(t, int(rpc.DefaultPageSize), int(resp.PageSize))
+	assert.Equal(t, "", resp.NextPageCursor)
+
+	event := resp.Events[0]
+	assert.Equal(t, []byte("hello world"), event.Data)
+
+	_, err = ds.DeleteData(context.Background(), &datastore.DeleteRequest{
+		UserUid: "bob",
+	})
+	assert.Nil(t, err)
+
+	resp, err = ds.ReadData(context.Background(), &datastore.ReadRequest{
+		PublicKey: "123abc",
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, "123abc", resp.PublicKey)
+	assert.Len(t, resp.Events, 0)
+}
+
+func TestWriteDataInvalid(t *testing.T) {
+	ds := getTestDatastore(t)
+	defer ds.Stop()
+
+	testcases := []struct {
+		label         string
+		request       *datastore.WriteRequest
+		expectedError string
+	}{
+		{
+			label: "missing public_key",
+			request: &datastore.WriteRequest{
+				UserUid: "bob",
+			},
+			expectedError: "twirp error invalid_argument: public_key is required",
+		},
+		{
+			label: "missing user_uid",
+			request: &datastore.WriteRequest{
+				PublicKey: "device1",
+			},
+			expectedError: "twirp error invalid_argument: user_uid is required",
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.label, func(t *testing.T) {
+			_, err := ds.WriteData(context.Background(), tc.request)
+			assert.NotNil(t, err)
+			assert.Equal(t, tc.expectedError, err.Error())
+		})
+	}
+}
+
+func TestReadDataInvalid(t *testing.T) {
+	ds := getTestDatastore(t)
+	defer ds.Stop()
+
+	testcases := []struct {
+		label         string
+		request       *datastore.ReadRequest
+		expectedError string
+	}{
+		{
+			label:         "missing public_key",
+			request:       &datastore.ReadRequest{},
+			expectedError: "twirp error invalid_argument: public_key is required",
+		},
+		{
+			label: "large page size",
+			request: &datastore.ReadRequest{
+				PublicKey: "123abc",
+				PageSize:  1001,
+			},
+			expectedError: "twirp error invalid_argument: page_size must be between 1 and 1000",
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.label, func(t *testing.T) {
+			_, err := ds.ReadData(context.Background(), tc.request)
+			assert.NotNil(t, err)
+			assert.Equal(t, tc.expectedError, err.Error())
+		})
+	}
+}
+
+func TestDeleteDataInvalid(t *testing.T) {
+	ds := getTestDatastore(t)
+	defer ds.Stop()
+
+	testcases := []struct {
+		label         string
+		request       *datastore.DeleteRequest
+		expectedError string
+	}{
+		{
+			label:         "missing user_uid",
+			request:       &datastore.DeleteRequest{},
+			expectedError: "twirp error invalid_argument: user_uid is required",
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.label, func(t *testing.T) {
+			_, err := ds.DeleteData(context.Background(), tc.request)
+			assert.NotNil(t, err)
+			assert.Equal(t, tc.expectedError, err.Error())
+		})
+	}
+}
