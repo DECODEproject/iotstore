@@ -8,8 +8,8 @@ if set -o | grep -q "pipefail"; then
   set -o pipefail
 fi
 
-DBNAME=$(basename "$DATABASE_URL")
-if ! psql -tc "SELECT 1" "$DATABASE_URL" >/dev/null 2>&1; then
+DBNAME=$(basename "$IOTSTORE_DATABASE_URL")
+if ! psql -tc "SELECT 1" "$IOTSTORE_DATABASE_URL" >/dev/null 2>&1; then
   echo "Creating database $DBNAME"
   psql -c "CREATE DATABASE $DBNAME" postgres >/dev/null 2>&1;
 fi
@@ -24,7 +24,7 @@ go tool cover -html=.coverage/coverage.out -o .coverage/coverage.html
 echo
 
 echo -n "Checking gofmt: "
-ERRS=$(find "$@" -type f -name \*.go | xargs gofmt -l 2>&1 || true)
+ERRS=$(find "$@" -type f ! -name assets.go -name \*.go | xargs gofmt -l 2>&1 || true)
 if [ -n "${ERRS}" ]; then
     echo "FAIL - the following files need to be gofmt'ed:"
     for e in ${ERRS}; do

@@ -96,7 +96,7 @@ test: .build-dirs .compose ## Run tests in the containerized environment
 		run \
 		--rm \
 		-u $$(id -u):$$(id -g) \
-		-e "DATABASE_URL=postgres://iotstore:password@postgres/iotstore_test" \
+		-e "IOTSTORE_DATABASE_URL=postgres://iotstore:password@postgres/iotstore_test?sslmode=disable" \
 		app \
 		/bin/sh -c " \
 			./build/test.sh $(SRC_DIRS) \

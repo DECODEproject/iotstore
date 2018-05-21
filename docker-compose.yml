@@ -24,7 +24,7 @@ services:
       - PGHOST=postgres
       - PGPASSWORD=password
       - PGUSER=iotstore
-      - DATABASE_URL=postgres://iotstore:password@postgres:5432/iotstore_development?sslmode=disable
+      - IOTSTORE_DATABASE_URL=postgres://iotstore:password@postgres:5432/iotstore_development?sslmode=disable
 
 
   postgres:
