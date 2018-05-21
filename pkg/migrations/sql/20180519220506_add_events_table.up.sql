@@ -9,8 +9,8 @@ CREATE TABLE IF NOT EXISTS events (
 CREATE INDEX IF NOT EXISTS events_public_key_idx
   ON events (public_key);
 
-CREATE INDEX IF NOT EXISTS events_recorded_at_idx
-  ON events (recorded_at);
+CREATE INDEX IF NOT EXISTS events_recorded_at_user_uid_idx
+  ON events (recorded_at, user_uid);
 
-CREATE INDEX IF NOT EXISTS events_user_id_idx
+CREATE INDEX IF NOT EXISTS events_user_uid_idx
   ON events (user_uid);
