@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"testing"
+	"time"
 
 	kitlog "github.com/go-kit/kit/log"
 	"github.com/stretchr/testify/assert"
@@ -177,4 +178,72 @@ func TestDeleteDataInvalid(t *testing.T) {
 			assert.Equal(t, tc.expectedError, err.Error())
 		})
 	}
+}
+
+func TestPagination(t *testing.T) {
+	ds := getTestDatastore(t)
+	defer ds.Stop()
+
+	fixtures := []struct {
+		publicKey string
+		userID    string
+		timestamp string
+		data      []byte
+	}{
+		{
+			publicKey: "abc123",
+			userID:    "alice",
+			timestamp: "2018-05-01T08:00:00Z",
+			data:      []byte("first"),
+		},
+		{
+			publicKey: "abc123",
+			userID:    "alice",
+			timestamp: "2018-05-01T08:02:00Z",
+			data:      []byte("third"),
+		},
+		{
+			publicKey: "abc123",
+			userID:    "bob",
+			timestamp: "2018-05-01T08:01:00Z",
+			data:      []byte("second"),
+		},
+		{
+			publicKey: "abc123",
+			userID:    "bob",
+			timestamp: "2018-05-01T08:02:00Z",
+			data:      []byte("fourth"),
+		},
+	}
+
+	// load fixtures into db
+	for _, f := range fixtures {
+		ts, _ := time.Parse(time.RFC3339, f.timestamp)
+
+		ds.DB.MustExec("INSERT INTO events (public_key, user_uid, recorded_at, data) VALUES ($1, $2, $3, $4)", f.publicKey, f.userID, ts, f.data)
+	}
+
+	resp, err := ds.ReadData(context.Background(), &datastore.ReadRequest{
+		PublicKey: "abc123",
+		PageSize:  3,
+	})
+
+	assert.Nil(t, err)
+	assert.Equal(t, "abc123", resp.PublicKey)
+	assert.Len(t, resp.Events, 3)
+	assert.NotEqual(t, "", resp.NextPageCursor)
+
+	assert.Equal(t, "first", string(resp.Events[0].Data))
+	assert.Equal(t, "second", string(resp.Events[1].Data))
+	assert.Equal(t, "third", string(resp.Events[2].Data))
+
+	resp, err = ds.ReadData(context.Background(), &datastore.ReadRequest{
+		PublicKey:  "abc123",
+		PageSize:   3,
+		PageCursor: resp.NextPageCursor,
+	})
+
+	assert.Nil(t, err)
+	assert.Len(t, resp.Events, 1)
+	assert.Equal(t, "", resp.NextPageCursor)
 }

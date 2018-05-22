@@ -2,6 +2,7 @@ package rpc
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -39,8 +40,15 @@ var _ datastore.Datastore = &Datastore{}
 
 // event is an internal type used when pulling records from the database.
 type event struct {
+	ID         int64     `db:"id"`
 	RecordedAt time.Time `db:"recorded_at"`
 	Data       []byte    `db:"data"`
+}
+
+// cursor is an internal type used when paginating.
+type cursor struct {
+	EventID   int64     `json:"eventID"`
+	Timestamp time.Time `json:"timestamp"`
 }
 
 // NewDatastore returns a newly instantiated Datastore instance. It takes as
@@ -96,7 +104,9 @@ func (d *Datastore) WriteData(ctx context.Context, req *datastore.WriteRequest) 
 		return nil, twirp.RequiredArgumentError("user_uid")
 	}
 
-	sql, args, err := sq.Insert("events").Columns("public_key", "user_uid", "data").Values(req.PublicKey, req.UserUid, req.Data).ToSql()
+	sql, args, err := sq.Insert("events").Columns("public_key", "user_uid", "data").
+		Values(req.PublicKey, req.UserUid, req.Data).ToSql()
+
 	if err != nil {
 		return nil, twirp.InternalErrorWith(err)
 	}
@@ -113,6 +123,9 @@ func (d *Datastore) WriteData(ctx context.Context, req *datastore.WriteRequest) 
 	return &datastore.WriteResponse{}, nil
 }
 
+// ReadData is the handler that allows a client to request data from the
+// datastore matching search parameters defined in the incoming
+// datastore.ReadRequest object.
 func (d *Datastore) ReadData(ctx context.Context, req *datastore.ReadRequest) (*datastore.ReadResponse, error) {
 	if req.PublicKey == "" {
 		return nil, twirp.RequiredArgumentError("public_key")
@@ -126,11 +139,22 @@ func (d *Datastore) ReadData(ctx context.Context, req *datastore.ReadRequest) (*
 		return nil, twirp.InvalidArgumentError("page_size", fmt.Sprintf("must be between 1 and %v", MaxPageSize))
 	}
 
-	builder := sq.Select("recorded_at", "data").
+	builder := sq.Select("id", "recorded_at", "data").
 		From("events").
-		OrderBy("recorded_at ASC").
+		OrderBy("recorded_at ASC", "id ASC").
 		Where(sq.Eq{"public_key": req.PublicKey}).
 		Limit(uint64(req.PageSize))
+
+	if req.PageCursor != "" {
+		// decode the cursor
+		var c cursor
+		err := json.Unmarshal([]byte(req.PageCursor), &c)
+		if err != nil {
+			return nil, twirp.InternalErrorWith(err)
+		}
+
+		builder = builder.Where(sq.GtOrEq{"recorded_at": c.Timestamp}).Where(sq.Gt{"id": c.EventID})
+	}
 
 	sql, args, err := builder.ToSql()
 	if err != nil {
@@ -154,7 +178,6 @@ func (d *Datastore) ReadData(ctx context.Context, req *datastore.ReadRequest) (*
 		if err != nil {
 			return nil, twirp.InternalErrorWith(err)
 		}
-
 		ev, err := buildEncryptedEvent(&e)
 		if err != nil {
 			return nil, twirp.InternalErrorWith(err)
@@ -163,13 +186,21 @@ func (d *Datastore) ReadData(ctx context.Context, req *datastore.ReadRequest) (*
 		events = append(events, ev)
 	}
 
+	nextCursor, err := buildNextCursor(events, req.PageSize)
+	if err != nil {
+		return nil, twirp.InternalErrorWith(err)
+	}
+
 	return &datastore.ReadResponse{
-		PublicKey: req.PublicKey,
-		Events:    events,
-		PageSize:  req.PageSize,
+		PublicKey:      req.PublicKey,
+		Events:         events,
+		PageSize:       req.PageSize,
+		NextPageCursor: nextCursor,
 	}, nil
 }
 
+// DeleteData is our handler function that allows a client to delete data for a
+// specific user.
 func (d *Datastore) DeleteData(ctx context.Context, req *datastore.DeleteRequest) (*datastore.DeleteResponse, error) {
 	if req.UserUid == "" {
 		return nil, twirp.RequiredArgumentError("user_uid")
@@ -194,6 +225,8 @@ func (d *Datastore) DeleteData(ctx context.Context, req *datastore.DeleteRequest
 	return &datastore.DeleteResponse{}, nil
 }
 
+// buildEncryptedEvent is a helper function that converts our internal event
+// type read from the database into an external datastore.EncryptedEvent.
 func buildEncryptedEvent(e *event) (*datastore.EncryptedEvent, error) {
 	timestamp, err := ptypes.TimestampProto(e.RecordedAt)
 	if err != nil {
@@ -203,5 +236,37 @@ func buildEncryptedEvent(e *event) (*datastore.EncryptedEvent, error) {
 	return &datastore.EncryptedEvent{
 		EventTime: timestamp,
 		Data:      e.Data,
+		EventId:   e.ID,
 	}, nil
+}
+
+// buildNextCursor returns either a marshalled cursor instance if there may be
+// more results to fetch (i.e. the number of events equals the page size), an
+// empty string if no results are possible (length of results is less than the
+// page size), or an error should we fail to generate the new cursor in any way.
+func buildNextCursor(events []*datastore.EncryptedEvent, pageSize uint32) (string, error) {
+	if len(events) < int(pageSize) {
+		return "", nil
+	}
+	// there might be more so build a cursor based on the last event
+	lastEvent := events[len(events)-1]
+
+	// convert timestamp to time.Time
+	timestamp, err := ptypes.Timestamp(lastEvent.EventTime)
+	if err != nil {
+		return "", err
+	}
+
+	// create non-empty cursor meaning the requestor can look for more pages
+	c := &cursor{
+		Timestamp: timestamp,
+		EventID:   lastEvent.EventId,
+	}
+
+	b, err := json.Marshal(c)
+	if err != nil {
+		return "", err
+	}
+
+	return string(b), nil
 }
