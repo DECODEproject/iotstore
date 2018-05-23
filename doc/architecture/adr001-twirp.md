@@ -81,11 +81,28 @@ We will use Twirp to implement the datastore service's API.
 
 Reasoning:
 
-* automatic client generation from a single protocol buffer definition is a really nice feature.
+* automatic client generation from a single protocol buffer definition is a
+  really nice feature.
 * uses HTTP 1.1 so easier to integrate with existing infrastructure than GRPC
 * natively exposes a JSON/HTTP endpoint meaning we have the same relatively
   easy CLI testing or debuggability as a standard REST API, but with the more
   efficient protocol buffer implementation that real clients should use.
+
+A single repository has been created that will hold all protocol buffer
+service definitions for the services being developed for DECODE. The location
+of that repository at time of writing is:
+https://github.com/thingful/decode-protorepo
+
+The language bindings for clients generated from this repo will be pushed
+into their own repositories via an automated script. These language bindings
+will then be packaged in a language appropriate way so meaning they are easy
+to use for any developers attempting to write code that interacts with the
+service (i.e. Go will just use the repo, but for other languages the bindings
+will be packaged into the expected format for the language and deployed to
+the standard package index).
+
+Given this project uses Go, the Go bindings for the datastore are available
+here: https://github.com/thingful/twirp-datastore-go
 
 ## Status
 
