@@ -36,5 +36,7 @@ func TestStartStop(t *testing.T) {
 	time.Sleep(time.Second * 1)
 
 	err := s.Stop()
-	assert.Nil(t, err)
+	if err != nil {
+		t.Errorf("Unexpected error on Stop: %v", err)
+	}
 }
