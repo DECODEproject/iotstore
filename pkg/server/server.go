@@ -9,6 +9,8 @@ import (
 	"time"
 
 	kitlog "github.com/go-kit/kit/log"
+	twrpprom "github.com/joneskoo/twirp-serverhook-prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	datastore "github.com/thingful/twirp-datastore-go"
 
 	"github.com/thingful/iotstore/pkg/rpc"
@@ -32,12 +34,15 @@ func PulseHandler(w http.ResponseWriter, r *http.Request) {
 // NewServer returns a new simple HTTP server.
 func NewServer(addr string, connStr string, logger kitlog.Logger) *Server {
 	ds := rpc.NewDatastore(connStr, logger)
-	twirpHandler := datastore.NewDatastoreServer(ds, nil)
+	hooks := twrpprom.NewServerHooks(nil)
+
+	twirpHandler := datastore.NewDatastoreServer(ds, hooks)
 
 	// multiplex twirp handler into a mux with another handler
 	mux := http.NewServeMux()
 	mux.Handle(datastore.DatastorePathPrefix, twirpHandler)
 	mux.HandleFunc("/pulse", PulseHandler)
+	mux.Handle("/metrics", promhttp.Handler())
 
 	// create our http.Server instance
 	srv := &http.Server{
