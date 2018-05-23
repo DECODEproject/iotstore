@@ -114,8 +114,6 @@ func (d *Datastore) WriteData(ctx context.Context, req *datastore.WriteRequest) 
 
 	sql = d.DB.Rebind(sql)
 
-	d.logger.Log("sql", sql, "public_key", args[0], "user_uid", args[1])
-
 	_, err = d.DB.Exec(sql, args...)
 	if err != nil {
 		return nil, twirp.InternalErrorWith(err)
@@ -162,8 +160,6 @@ func (d *Datastore) ReadData(ctx context.Context, req *datastore.ReadRequest) (*
 	}
 
 	sql = d.DB.Rebind(sql)
-
-	d.logger.Log("msg", "reading events", "sql", sql)
 
 	rows, err := d.DB.Queryx(sql, args...)
 	if err != nil {
