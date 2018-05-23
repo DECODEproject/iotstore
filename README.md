@@ -26,3 +26,15 @@ can run `make push ARCH=arm` or `make push ARCH=arm64` to push different
 architecture containers. To push all containers run `make all-push`.
 
 Run `make clean` to clean up.
+
+## Testing
+
+To run the test suite, use the make task `test`. This will run all testcases
+inside a containerized environment but pointing at a different DB instance to
+avoid overwriting any data stored in your local development DB.
+
+In addition, there is a simple bash script (in `client/client.sh`) that uses
+curl to exercise the basic functions of the API. The script inserts 4
+entries, then paginates through them, before deleting all inserted data. The
+purpose of this script is just to sanity check the functionality from the
+command line.
