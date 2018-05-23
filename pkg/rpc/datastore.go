@@ -2,6 +2,7 @@ package rpc
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -147,8 +148,7 @@ func (d *Datastore) ReadData(ctx context.Context, req *datastore.ReadRequest) (*
 
 	if req.PageCursor != "" {
 		// decode the cursor
-		var c cursor
-		err := json.Unmarshal([]byte(req.PageCursor), &c)
+		c, err := decodeCursor(req.PageCursor)
 		if err != nil {
 			return nil, twirp.InternalErrorWith(err)
 		}
@@ -186,7 +186,7 @@ func (d *Datastore) ReadData(ctx context.Context, req *datastore.ReadRequest) (*
 		events = append(events, ev)
 	}
 
-	nextCursor, err := buildNextCursor(events, req.PageSize)
+	nextCursor, err := encodeCursor(events, req.PageSize)
 	if err != nil {
 		return nil, twirp.InternalErrorWith(err)
 	}
@@ -240,11 +240,11 @@ func buildEncryptedEvent(e *event) (*datastore.EncryptedEvent, error) {
 	}, nil
 }
 
-// buildNextCursor returns either a marshalled cursor instance if there may be
+// encodeCursor returns either a marshalled cursor instance if there may be
 // more results to fetch (i.e. the number of events equals the page size), an
 // empty string if no results are possible (length of results is less than the
 // page size), or an error should we fail to generate the new cursor in any way.
-func buildNextCursor(events []*datastore.EncryptedEvent, pageSize uint32) (string, error) {
+func encodeCursor(events []*datastore.EncryptedEvent, pageSize uint32) (string, error) {
 	if len(events) < int(pageSize) {
 		return "", nil
 	}
@@ -268,5 +268,23 @@ func buildNextCursor(events []*datastore.EncryptedEvent, pageSize uint32) (strin
 		return "", err
 	}
 
-	return string(b), nil
+	return base64.StdEncoding.EncodeToString(b), nil
+}
+
+// decodeCursor is a helper function that takes our cursor string if set, then
+// reverses the encoding process which here is decoding the base64 string, and
+// then parsing the JSON into our cursor type.
+func decodeCursor(in string) (*cursor, error) {
+	b, err := base64.StdEncoding.DecodeString(in)
+	if err != nil {
+		return nil, err
+	}
+
+	var c cursor
+	err = json.Unmarshal(b, &c)
+	if err != nil {
+		return nil, err
+	}
+
+	return &c, nil
 }
