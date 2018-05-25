@@ -154,6 +154,12 @@
   revision = "8b1c2da0d56deffdbb9e48d4414b4e674bd8083e"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/serenize/snaker"
+  packages = ["."]
+  revision = "a683aaf2d516deecd70cad0c72e3ca773ecfcef0"
+
+[[projects]]
   name = "github.com/spf13/cobra"
   packages = ["."]
   revision = "a1f051bc3eba734da4772d60e2d677f47cf93ef4"
@@ -190,6 +196,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "faf5cc73ee9c40860e6a3d9541d968d1512feedc68155ab99e00723384e87174"
+  inputs-digest = "ad168422e476849d90b602f7eed0af557f25a7abdc584d0fc3fe95357e159120"
   solver-name = "gps-cdcl"
   solver-version = 1
