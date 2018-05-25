@@ -74,8 +74,8 @@ func NewMigration(dirName, migrationName string, logger kitlog.Logger) error {
 	}
 
 	re := regexp.MustCompile(`\A[a-zA-Z]+\z`)
-	if !re.Match(migrationName) {
-		return errors.New("Name must be a single CamelCase value with no numbers or special characters")
+	if !re.MatchString(migrationName) {
+		return errors.New("Name must be a single CamelCased string with no numbers or special characters")
 	}
 
 	migrationID := time.Now().Format("20060102150405") + "_" + snaker.CamelToSnake(migrationName)
