@@ -30,7 +30,7 @@ services:
   postgres:
     image: postgres:10-alpine
     ports:
-      - "5432:5432"
+      - "5432"
     volumes:
       - postgres_vol:/var/lib/postgresql/data
     restart: always
