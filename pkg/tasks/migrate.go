@@ -1,10 +1,13 @@
 package tasks
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/thingful/iotstore/pkg/logger"
 	"github.com/thingful/iotstore/pkg/postgres"
+	"github.com/thingful/iotstore/pkg/version"
 )
 
 func init() {
@@ -30,14 +33,14 @@ to run down migrations.`,
 var migrateNewCmd = &cobra.Command{
 	Use:   "new",
 	Short: "Create a new Postgres migration",
-	Long: `This command is a simple helper that creates a pair of matching migration
-files, named correctly within the specified directory. The desired name of
+	Long: fmt.Sprintf(`This command is a simple helper that creates a pair of matching migration
+files, correctly named within the specified directory. The desired name of
 the migration should be passed via a positional argument after the new
 subcommand.
 
 For example:
 
-    $ iotstore migrate new AddUserTable`,
+    $ %s migrate new AddUserTable`, version.BinaryName),
 	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		dir, err := cmd.Flags().GetString("dir")
