@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"time"
 
 	kitlog "github.com/go-kit/kit/log"
@@ -12,6 +13,7 @@ import (
 	"github.com/golang-migrate/migrate/database/postgres"
 	bindata "github.com/golang-migrate/migrate/source/go-bindata"
 	"github.com/pkg/errors"
+	"github.com/serenize/snaker"
 
 	"github.com/thingful/iotstore/pkg/migrations"
 )
@@ -71,7 +73,12 @@ func NewMigration(dirName, migrationName string, logger kitlog.Logger) error {
 		return errors.New("Must specify a name when creating a migration")
 	}
 
-	migrationID := time.Now().Format("20060102150405") + "_" + migrationName
+	re := regexp.MustCompile(`\A[a-zA-Z]+\z`)
+	if !re.Match(migrationName) {
+		return errors.New("Name must be a single CamelCase value with no numbers or special characters")
+	}
+
+	migrationID := time.Now().Format("20060102150405") + "_" + snaker.CamelToSnake(migrationName)
 	upFileName := fmt.Sprintf("%s.up.sql", migrationID)
 	downFileName := fmt.Sprintf("%s.down.sql", migrationID)
 
