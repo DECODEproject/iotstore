@@ -11,6 +11,7 @@ func init() {
 	rootCmd.AddCommand(serverCmd)
 
 	serverCmd.Flags().StringP("addr", "a", "0.0.0.0:8080", "Specify the address to which the server binds")
+	serverCmd.Flags().Bool("verbose", false, "Enable verbose output")
 }
 
 var serverCmd = &cobra.Command{
@@ -35,9 +36,14 @@ clients unable to use the Protocol Buffer API.`,
 			return err
 		}
 
+		verbose, err := cmd.Flags().GetBool("verbose")
+		if err != nil {
+			return err
+		}
+
 		logger := logger.NewLogger()
 
-		s := server.NewServer(addr, datasource, logger)
+		s := server.NewServer(addr, datasource, verbose, logger)
 
 		return s.Start()
 	},

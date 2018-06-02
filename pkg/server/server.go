@@ -32,8 +32,8 @@ func PulseHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // NewServer returns a new simple HTTP server.
-func NewServer(addr string, connStr string, logger kitlog.Logger) *Server {
-	ds := rpc.NewDatastore(connStr, logger)
+func NewServer(addr, connStr string, verbose bool, logger kitlog.Logger) *Server {
+	ds := rpc.NewDatastore(connStr, verbose, logger)
 	hooks := twrpprom.NewServerHooks(nil)
 
 	twirpHandler := datastore.NewDatastoreServer(ds, hooks)

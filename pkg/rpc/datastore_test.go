@@ -26,7 +26,7 @@ func getTestDatastore(t *testing.T) *rpc.Datastore {
 	connStr := os.Getenv("IOTSTORE_DATABASE_URL")
 
 	// create datastore
-	ds := rpc.NewDatastore(connStr, logger)
+	ds := rpc.NewDatastore(connStr, true, logger)
 
 	// start the datastore (this runs all migrations slightly annoyingly)
 	err := ds.Start()

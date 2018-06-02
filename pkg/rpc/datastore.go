@@ -34,6 +34,7 @@ type Datastore struct {
 	DB      *sqlx.DB
 	connStr string
 	logger  kitlog.Logger
+	verbose bool
 }
 
 // ensure we adhere to the interface
@@ -55,12 +56,13 @@ type cursor struct {
 // NewDatastore returns a newly instantiated Datastore instance. It takes as
 // parameters a DB connection string and a logger. The connection string is
 // passed down to the postgres package where it is used to connect.
-func NewDatastore(connStr string, logger kitlog.Logger) *Datastore {
+func NewDatastore(connStr string, verbose bool, logger kitlog.Logger) *Datastore {
 	logger = kitlog.With(logger, "module", "rpc")
 
 	ds := &Datastore{
 		connStr: connStr,
 		logger:  logger,
+		verbose: verbose,
 	}
 
 	return ds
@@ -105,6 +107,10 @@ func (d *Datastore) WriteData(ctx context.Context, req *datastore.WriteRequest) 
 		return nil, twirp.RequiredArgumentError("user_uid")
 	}
 
+	if d.verbose {
+		d.logger.Log("public_key", req.PublicKey, "user_uid", req.UserUid, "msg", "WriteData")
+	}
+
 	sql, args, err := sq.Insert("events").Columns("public_key", "user_uid", "data").
 		Values(req.PublicKey, req.UserUid, req.Data).ToSql()
 
@@ -136,6 +142,10 @@ func (d *Datastore) ReadData(ctx context.Context, req *datastore.ReadRequest) (*
 
 	if req.PageSize < 0 || req.PageSize > MaxPageSize {
 		return nil, twirp.InvalidArgumentError("page_size", fmt.Sprintf("must be between 1 and %v", MaxPageSize))
+	}
+
+	if d.verbose {
+		d.logger.Log("public_key", req.PublicKey, "page_size", req.PageSize, "msg", "ReadData")
 	}
 
 	builder := sq.Select("id", "recorded_at", "data").
@@ -200,6 +210,10 @@ func (d *Datastore) ReadData(ctx context.Context, req *datastore.ReadRequest) (*
 func (d *Datastore) DeleteData(ctx context.Context, req *datastore.DeleteRequest) (*datastore.DeleteResponse, error) {
 	if req.UserUid == "" {
 		return nil, twirp.RequiredArgumentError("user_uid")
+	}
+
+	if d.verbose {
+		d.logger.Log("user_uid", req.UserUid, "msg", "DeleteData")
 	}
 
 	builder := sq.Delete("").
