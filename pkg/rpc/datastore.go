@@ -108,7 +108,7 @@ func (d *Datastore) WriteData(ctx context.Context, req *datastore.WriteRequest) 
 	}
 
 	if d.verbose {
-		d.logger.Log("public_key", req.PublicKey, "user_uid", req.UserUid, "msg", "WriteData")
+		d.logger.Log("public_key", req.PublicKey, "user_uid", req.UserUid, "msg", "WriteData", "encodedPayload", string(req.Data))
 	}
 
 	sql, args, err := sq.Insert("events").Columns("public_key", "user_uid", "data").
