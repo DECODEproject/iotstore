@@ -6,8 +6,10 @@ if set -o | grep -q "pipefail"; then
   set -o pipefail
 fi
 
+RETRIES=10
 DBNAME=$(basename "$IOTSTORE_DATABASE_URL" | awk -F'[?]' '{print $1}')
-if ! psql -tc "SELECT 1" "$DBNAME" >/dev/null 2>&1; then
-  echo "Creating database $DBNAME"
-  psql -c "CREATE DATABASE $DBNAME" postgres >/dev/null 2>&1;
-fi
+
+until psql -c '\q' "$DBNAME" || [ "$RETRIES" -eq 0 ]; do
+  echo "Waiting for postgres server, $((RETRIES--)) remaining attempts"
+  sleep 1
+done

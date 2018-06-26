@@ -102,7 +102,7 @@ func _20180519220506_add_events_tableUpSql() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "20180519220506_add_events_table.up.sql", size: 410, mode: os.FileMode(420), modTime: time.Unix(1526917025, 0)}
+	info := bindataFileInfo{name: "20180519220506_add_events_table.up.sql", size: 410, mode: os.FileMode(420), modTime: time.Unix(1529969599, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
