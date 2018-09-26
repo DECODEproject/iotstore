@@ -81,6 +81,7 @@ func (s *Server) Start() error {
 	return s.Stop()
 }
 
+// Stop stops the server running.
 func (s *Server) Stop() error {
 	s.logger.Log("msg", "stopping")
 	ctx, cancelFn := context.WithTimeout(context.Background(), 5*time.Second)
