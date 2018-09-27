@@ -1,8 +1,8 @@
 {
   "Tools": [
     {
-      "Repository": "github.com/go-bindata/go-bindata/go-bindata",
-      "Commit": "5ebd2c033d84e12a7f4aae4483d98ec7dde53b66"
+      "Repository": "github.com/kevinburke/go-bindata/go-bindata",
+      "Commit": "06af60a4461b70d84a2b173d92f9f425d78baf55"
     }
   ],
   "RetoolVersion": "1.3.7"
