@@ -3,53 +3,68 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:d6afaeed1502aa28e80a4ed0981d570ad91b2579193404256ce672ed0a609e0d"
   name = "github.com/beorn7/perks"
   packages = ["quantile"]
+  pruneopts = "UT"
   revision = "3a771d992973f24aa725d07868b467d1ddfceafb"
 
 [[projects]]
+  digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
-  revision = "346938d642f2ec3594ed81d874461961cd0faa76"
-  version = "v1.1.0"
+  pruneopts = "UT"
+  revision = "8991bc29aa16c548c550c7ff78260e27b9ab7c73"
+  version = "v1.1.1"
 
 [[projects]]
   branch = "master"
+  digest = "1:d85af8bc63f84060e0a8c66ef6d875c2a1b731b766eb29049111efffb0765431"
   name = "github.com/elgris/sqrl"
   packages = ["."]
-  revision = "f1d9ecedc98d1483fd102348caa7284a59da9d2f"
+  pruneopts = "UT"
+  revision = "d09d22f2d5ace63f879e3e06d48f88f12c1a4ff8"
 
 [[projects]]
+  digest = "1:0cfcded8689c2c964c223650009c5dd9e283c22d57f18f2335aafa16cc22acf1"
   name = "github.com/go-kit/kit"
   packages = ["log"]
+  pruneopts = "UT"
   revision = "ca4112baa34cb55091301bdc13b1420a122b1b9e"
   version = "v0.7.0"
 
 [[projects]]
+  digest = "1:31a18dae27a29aa074515e43a443abfd2ba6deb6d69309d8d7ce789c45f34659"
   name = "github.com/go-logfmt/logfmt"
   packages = ["."]
+  pruneopts = "UT"
   revision = "390ab7935ee28ec6b286364bba9b4dd6410cb3d5"
   version = "v0.3.0"
 
 [[projects]]
+  digest = "1:586ea76dbd0374d6fb649a91d70d652b7fe0ccffb8910a77468e7702e7901f3d"
   name = "github.com/go-stack/stack"
   packages = ["."]
-  revision = "259ab82a6cad3992b4e21ff5cac294ccb06474bc"
-  version = "v1.7.0"
+  pruneopts = "UT"
+  revision = "2fee6af1a9795aafbe0253a0cfbdf668e1fb8a9a"
+  version = "v1.8.0"
 
 [[projects]]
+  digest = "1:2348ca23c7a9e6eb0c9d3fabd7648fc6c74f5ec697abc33b82031de2844c3f19"
   name = "github.com/golang-migrate/migrate"
   packages = [
     ".",
     "database",
     "database/postgres",
     "source",
-    "source/go-bindata"
+    "source/go-bindata",
   ]
+  pruneopts = "UT"
   revision = "22f249514de9aa3f8a720a7cabbdd45d294f83a1"
   version = "v3.2.0"
 
 [[projects]]
+  digest = "1:9d6dc4d6de69b330d0de86494d6db90c09848c003d5db748f40c925f865c8534"
   name = "github.com/golang/protobuf"
   packages = [
     "jsonpb",
@@ -58,144 +73,222 @@
     "ptypes/any",
     "ptypes/duration",
     "ptypes/struct",
-    "ptypes/timestamp"
+    "ptypes/timestamp",
   ]
-  revision = "b4deda0973fb4c70b50d226b1af49f3da59f5265"
-  version = "v1.1.0"
+  pruneopts = "UT"
+  revision = "aa810b61a9c79d51363740d207bb46cf8e620ed5"
+  version = "v1.2.0"
 
 [[projects]]
+  digest = "1:3a26588bc48b96825977c1b3df964f8fd842cd6860cc26370588d3563433cf11"
+  name = "github.com/google/uuid"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "d460ce9f8df2e77fb1ba55ca87fafed96c607494"
+  version = "v1.0.0"
+
+[[projects]]
+  digest = "1:870d441fe217b8e689d7949fef6e43efbc787e50f200cb1e70dbca9204a1d6be"
   name = "github.com/inconshreveable/mousetrap"
   packages = ["."]
+  pruneopts = "UT"
   revision = "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75"
   version = "v1.0"
 
 [[projects]]
   branch = "master"
+  digest = "1:7654989089e5bd5b6734ec3be8b695e87d3f1f8d95620b343fd7d3995a5b60d7"
   name = "github.com/jmoiron/sqlx"
   packages = [
     ".",
-    "reflectx"
+    "reflectx",
   ]
-  revision = "2aeb6a910c2b94f2d5eb53d9895d80e27264ec41"
+  pruneopts = "UT"
+  revision = "0dae4fefe7c0e190f7b5a78dac28a1c82cc8d849"
 
 [[projects]]
   branch = "master"
+  digest = "1:3b3b7bee88c08d0daeec366e9bf568d0d205bfcd7af7406d684264270d9817af"
   name = "github.com/joneskoo/twirp-serverhook-prometheus"
   packages = ["."]
+  pruneopts = "UT"
   revision = "642713f927be4d0b0c8519f11984dc133037c611"
 
 [[projects]]
   branch = "master"
+  digest = "1:a64e323dc06b73892e5bb5d040ced475c4645d456038333883f58934abbf6f72"
   name = "github.com/kr/logfmt"
   packages = ["."]
+  pruneopts = "UT"
   revision = "b84e30acd515aadc4b783ad4ff83aff3299bdfe0"
 
 [[projects]]
   branch = "master"
+  digest = "1:8ef506fc2bb9ced9b151dafa592d4046063d744c646c1bbe801982ce87e4bc24"
   name = "github.com/lib/pq"
   packages = [
     ".",
-    "oid"
+    "oid",
   ]
-  revision = "d34b9ff171c21ad295489235aec8b6626023cd04"
+  pruneopts = "UT"
+  revision = "4ded0e9383f75c197b3a2aaa6d590ac52df6fd79"
 
 [[projects]]
+  digest = "1:ff5ebae34cfbf047d505ee150de27e60570e8c394b3b8fdbb720ff6ac71985fc"
   name = "github.com/matttproud/golang_protobuf_extensions"
   packages = ["pbutil"]
-  revision = "3247c84500bff8d9fb6d579d800f20b3e091582c"
-  version = "v1.0.0"
+  pruneopts = "UT"
+  revision = "c12348ce28de40eed0136aa2b644d0ee0650e56c"
+  version = "v1.0.1"
 
 [[projects]]
+  digest = "1:40e195917a951a8bf867cd05de2a46aaf1806c50cf92eebf4c16f78cd196f747"
   name = "github.com/pkg/errors"
   packages = ["."]
+  pruneopts = "UT"
   revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
   version = "v0.8.0"
 
 [[projects]]
+  digest = "1:0028cb19b2e4c3112225cd871870f2d9cf49b9b4276531f03438a88e94be86fe"
   name = "github.com/pmezard/go-difflib"
   packages = ["difflib"]
+  pruneopts = "UT"
   revision = "792786c7400a136282c1664665ae0a8db921c6c2"
   version = "v1.0.0"
 
 [[projects]]
+  digest = "1:d14a5f4bfecf017cb780bdde1b6483e5deb87e12c332544d2c430eda58734bcb"
   name = "github.com/prometheus/client_golang"
   packages = [
     "prometheus",
-    "prometheus/promhttp"
+    "prometheus/promhttp",
   ]
+  pruneopts = "UT"
   revision = "c5b7fccd204277076155f10851dad72b76a49317"
   version = "v0.8.0"
 
 [[projects]]
   branch = "master"
+  digest = "1:2d5cd61daa5565187e1d96bae64dbbc6080dacf741448e9629c64fd93203b0d4"
   name = "github.com/prometheus/client_model"
   packages = ["go"]
-  revision = "99fa1f4be8e564e8a6b613da7fa6f46c9edafc6c"
+  pruneopts = "UT"
+  revision = "5c3871d89910bfb32f5fcab2aa4b9ec68e65a99f"
 
 [[projects]]
   branch = "master"
+  digest = "1:63b68062b8968092eb86bedc4e68894bd096ea6b24920faca8b9dcf451f54bb5"
   name = "github.com/prometheus/common"
   packages = [
     "expfmt",
     "internal/bitbucket.org/ww/goautoneg",
-    "model"
+    "model",
   ]
-  revision = "7600349dcfe1abd18d72d3a1770870d9800a7801"
+  pruneopts = "UT"
+  revision = "c7de2306084e37d54b8be01f3541a8464345e9a5"
 
 [[projects]]
   branch = "master"
+  digest = "1:ef1dd9945e58ee9b635273d28c0ef3fa3742a7dedc038ebe207fd63e6ce000ef"
   name = "github.com/prometheus/procfs"
   packages = [
     ".",
     "internal/util",
     "nfs",
-    "xfs"
+    "xfs",
   ]
-  revision = "8b1c2da0d56deffdbb9e48d4414b4e674bd8083e"
+  pruneopts = "UT"
+  revision = "418d78d0b9a7b7de3a6bbc8a23def624cc977bb2"
 
 [[projects]]
   branch = "master"
+  digest = "1:efa124a0ca36a35cc1a1b472cb0fa2be1e7d9fd1db0f8bc9a042e42e4c6405aa"
   name = "github.com/serenize/snaker"
   packages = ["."]
+  pruneopts = "UT"
   revision = "a683aaf2d516deecd70cad0c72e3ca773ecfcef0"
 
 [[projects]]
+  digest = "1:645cabccbb4fa8aab25a956cbcbdf6a6845ca736b2c64e197ca7cbb9d210b939"
   name = "github.com/spf13/cobra"
   packages = ["."]
-  revision = "a1f051bc3eba734da4772d60e2d677f47cf93ef4"
-  version = "v0.0.2"
-
-[[projects]]
-  name = "github.com/spf13/pflag"
-  packages = ["."]
-  revision = "583c0c0531f06d5278b7d917446061adc344b5cd"
-  version = "v1.0.1"
-
-[[projects]]
-  name = "github.com/stretchr/testify"
-  packages = ["assert"]
-  revision = "12b6f73e6084dad08a7c6e575284b177ecafbc71"
-  version = "v1.2.1"
-
-[[projects]]
-  name = "github.com/thingful/twirp-datastore-go"
-  packages = ["."]
-  revision = "e4927e769f268bd8df71d99043bcaec365414d6c"
+  pruneopts = "UT"
+  revision = "ef82de70bb3f60c65fb8eebacbb2d122ef517385"
   version = "v0.0.3"
 
 [[projects]]
+  digest = "1:dab83a1bbc7ad3d7a6ba1a1cc1760f25ac38cdf7d96a5cdd55cd915a4f5ceaf9"
+  name = "github.com/spf13/pflag"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "9a97c102cda95a86cec2345a6f09f55a939babf5"
+  version = "v1.0.2"
+
+[[projects]]
+  digest = "1:18752d0b95816a1b777505a97f71c7467a8445b8ffb55631a7bf779f6ba4fa83"
+  name = "github.com/stretchr/testify"
+  packages = ["assert"]
+  pruneopts = "UT"
+  revision = "f35b8ab0b5a2cef36673838d662e249dd9c94686"
+  version = "v1.2.2"
+
+[[projects]]
+  digest = "1:af8b76badbe2dd80f25b31e357a9c36477fa15048945c3c193e15f0b1afcb04d"
+  name = "github.com/thingful/twirp-datastore-go"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "d9cd12566078f3a0fb1c14c02762c46da8af3094"
+  version = "v0.0.4"
+
+[[projects]]
+  digest = "1:bc5f818bb50c42b55721ab0ea9af6c28cad7d9e31db43eaa78d2ca487c9897ac"
   name = "github.com/twitchtv/twirp"
   packages = [
     ".",
     "ctxsetters",
-    "internal/contextkeys"
+    "internal/contextkeys",
   ]
-  revision = "2d98ac4d4ccb29e08ea745c758e6d103f971eba5"
-  version = "v5.4.0"
+  pruneopts = "UT"
+  revision = "d08b9415baf292b016ed9c55c37e66154c46c221"
+  version = "v5.5.0"
+
+[[projects]]
+  digest = "1:02bac7bfd3bf25d03cdcf343a7054e04c1149e11e62c443f602538adc529d714"
+  name = "goji.io"
+  packages = [
+    ".",
+    "internal",
+    "pat",
+    "pattern",
+  ]
+  pruneopts = "UT"
+  revision = "0d89ff54b2c18c9c4ba530e32496aef902d3c6cd"
+  version = "v2.0"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "ad168422e476849d90b602f7eed0af557f25a7abdc584d0fc3fe95357e159120"
+  input-imports = [
+    "github.com/elgris/sqrl",
+    "github.com/go-kit/kit/log",
+    "github.com/golang-migrate/migrate",
+    "github.com/golang-migrate/migrate/database/postgres",
+    "github.com/golang-migrate/migrate/source/go-bindata",
+    "github.com/golang/protobuf/ptypes",
+    "github.com/google/uuid",
+    "github.com/jmoiron/sqlx",
+    "github.com/joneskoo/twirp-serverhook-prometheus",
+    "github.com/lib/pq",
+    "github.com/pkg/errors",
+    "github.com/prometheus/client_golang/prometheus/promhttp",
+    "github.com/serenize/snaker",
+    "github.com/spf13/cobra",
+    "github.com/stretchr/testify/assert",
+    "github.com/thingful/twirp-datastore-go",
+    "github.com/twitchtv/twirp",
+    "goji.io",
+    "goji.io/pat",
+  ]
   solver-name = "gps-cdcl"
   solver-version = 1

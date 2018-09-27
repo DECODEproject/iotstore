@@ -14,14 +14,14 @@ curl --request "POST" \
      --location "http://localhost:8080/twirp/datastore.Datastore/WriteData" \
      --header "Content-Type: application/json" \
      --silent \
-     --data "{\"public_key\":\"abc123\",\"user_uid\":\"alice\",\"data\":\"$hello\"}" \
+     --data "{\"public_key\":\"abc123\",\"data\":\"$hello\"}" \
      | jq "."
 
 curl --request "POST" \
      --location "http://localhost:8080/twirp/datastore.Datastore/WriteData" \
      --header "Content-Type: application/json" \
      --silent \
-     --data "{\"public_key\":\"abc123\",\"user_uid\":\"alice\",\"data\":\"$world\"}" \
+     --data "{\"public_key\":\"abc123\",\"data\":\"$world\"}" \
      | jq "."
 
 echo "--> write some data for bob for public key abc123"
@@ -29,14 +29,14 @@ curl --request "POST" \
      --location "http://localhost:8080/twirp/datastore.Datastore/WriteData" \
      --header "Content-Type: application/json" \
      --silent \
-     --data "{\"public_key\":\"abc123\",\"user_uid\":\"bob\",\"data\":\"$hello\"}" \
+     --data "{\"public_key\":\"abc123\",\"data\":\"$hello\"}" \
      | jq "."
 
 curl --request "POST" \
      --location "http://localhost:8080/twirp/datastore.Datastore/WriteData" \
      --header "Content-Type: application/json" \
      --silent \
-     --data "{\"public_key\":\"abc123\",\"user_uid\":\"bob\",\"data\":\"$world\"}" \
+     --data "{\"public_key\":\"abc123\",\"data\":\"$world\"}" \
      | jq "."
 
 echo "--> read all data for public_key abc123"
@@ -63,26 +63,10 @@ curl --request "POST" \
      --data "{\"public_key\":\"abc123\",\"page_size\":3,\"page_cursor\":\"$cursor\"}" \
      | jq "."
 
-echo "--> delete alice's data"
-curl --request "POST" \
-     --location "http://localhost:8080/twirp/datastore.Datastore/DeleteData" \
-     --header "Content-Type: application/json" \
-     --silent \
-     --data '{"user_uid":"alice"}' \
-     | jq "."
-
 echo "--> read all data for public_key abc123 again"
 curl --request "POST" \
      --location "http://localhost:8080/twirp/datastore.Datastore/ReadData" \
      --header "Content-Type: application/json" \
      --silent \
      --data '{"public_key":"abc123"}' \
-     | jq "."
-
-echo "--> delete data for bob"
-curl --request "POST" \
-     --location "http://localhost:8080/twirp/datastore.Datastore/DeleteData" \
-     --header "Content-Type: application/json" \
-     --silent \
-     --data '{"user_uid":"bob"}' \
      | jq "."

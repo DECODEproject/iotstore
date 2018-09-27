@@ -8,12 +8,16 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/thingful/iotstore/pkg/middleware"
+
 	kitlog "github.com/go-kit/kit/log"
 	twrpprom "github.com/joneskoo/twirp-serverhook-prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	datastore "github.com/thingful/twirp-datastore-go"
+	goji "goji.io"
+	pat "goji.io/pat"
 
 	"github.com/thingful/iotstore/pkg/rpc"
+	datastore "github.com/thingful/twirp-datastore-go"
 )
 
 // Server is our top level type, contains all other components, is responsible
@@ -27,8 +31,8 @@ type Server struct {
 // PulseHandler is the simplest possible handler function - used to expose an
 // endpoint which a load balancer can ping to verify that a node is running and
 // accepting connections.
-func PulseHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "ok")
+func PulseHandler(rw http.ResponseWriter, req *http.Request) {
+	fmt.Fprintf(rw, "ok")
 }
 
 // NewServer returns a new simple HTTP server.
@@ -39,10 +43,13 @@ func NewServer(addr, connStr string, verbose bool, logger kitlog.Logger) *Server
 	twirpHandler := datastore.NewDatastoreServer(ds, hooks)
 
 	// multiplex twirp handler into a mux with another handler
-	mux := http.NewServeMux()
-	mux.Handle(datastore.DatastorePathPrefix, twirpHandler)
-	mux.HandleFunc("/pulse", PulseHandler)
-	mux.Handle("/metrics", promhttp.Handler())
+	mux := goji.NewMux()
+
+	mux.Handle(pat.Get(datastore.DatastorePathPrefix), twirpHandler)
+	mux.HandleFunc(pat.Get("/pulse"), PulseHandler)
+	mux.Handle(pat.Get("/metrics"), promhttp.Handler())
+
+	mux.Use(middleware.RequestIDMiddleware)
 
 	// create our http.Server instance
 	srv := &http.Server{
