@@ -234,12 +234,12 @@
   version = "v1.2.2"
 
 [[projects]]
-  digest = "1:b8e8097878ca34e330f96f38157ab3f4dca719e4657228226f9fa5c575ad6235"
+  digest = "1:af8b76badbe2dd80f25b31e357a9c36477fa15048945c3c193e15f0b1afcb04d"
   name = "github.com/thingful/twirp-datastore-go"
   packages = ["."]
   pruneopts = "UT"
-  revision = "e4927e769f268bd8df71d99043bcaec365414d6c"
-  version = "v0.0.3"
+  revision = "d9cd12566078f3a0fb1c14c02762c46da8af3094"
+  version = "v0.0.4"
 
 [[projects]]
   digest = "1:bc5f818bb50c42b55721ab0ea9af6c28cad7d9e31db43eaa78d2ca487c9897ac"
