@@ -103,16 +103,16 @@ func (d *Datastore) WriteData(ctx context.Context, req *datastore.WriteRequest) 
 		return nil, twirp.RequiredArgumentError("public_key")
 	}
 
-	if req.UserUid == "" {
-		return nil, twirp.RequiredArgumentError("user_uid")
-	}
-
 	if d.verbose {
-		d.logger.Log("public_key", req.PublicKey, "user_uid", req.UserUid, "msg", "WriteData", "encodedPayload", string(req.Data))
+		d.logger.Log(
+			"publicKey", req.PublicKey,
+			"msg", "WriteData",
+			"encodedPayload", string(req.Data),
+		)
 	}
 
-	sql, args, err := sq.Insert("events").Columns("public_key", "user_uid", "data").
-		Values(req.PublicKey, req.UserUid, req.Data).ToSql()
+	sql, args, err := sq.Insert("events").Columns("public_key", "data").
+		Values(req.PublicKey, req.Data).ToSql()
 
 	if err != nil {
 		return nil, twirp.InternalErrorWith(err)
@@ -145,7 +145,11 @@ func (d *Datastore) ReadData(ctx context.Context, req *datastore.ReadRequest) (*
 	}
 
 	if d.verbose {
-		d.logger.Log("public_key", req.PublicKey, "page_size", req.PageSize, "msg", "ReadData")
+		d.logger.Log(
+			"publicKey", req.PublicKey,
+			"pageSize", req.PageSize,
+			"msg", "ReadData",
+		)
 	}
 
 	builder := sq.Select("id", "recorded_at", "data").
@@ -177,6 +181,7 @@ func (d *Datastore) ReadData(ctx context.Context, req *datastore.ReadRequest) (*
 	}
 
 	events := []*datastore.EncryptedEvent{}
+	var lastEventID int64
 
 	for rows.Next() {
 		var e event
@@ -184,6 +189,9 @@ func (d *Datastore) ReadData(ctx context.Context, req *datastore.ReadRequest) (*
 		if err != nil {
 			return nil, twirp.InternalErrorWith(err)
 		}
+
+		lastEventID = e.ID
+
 		ev, err := buildEncryptedEvent(&e)
 		if err != nil {
 			return nil, twirp.InternalErrorWith(err)
@@ -192,7 +200,7 @@ func (d *Datastore) ReadData(ctx context.Context, req *datastore.ReadRequest) (*
 		events = append(events, ev)
 	}
 
-	nextCursor, err := encodeCursor(events, req.PageSize)
+	nextCursor, err := encodeCursor(events, req.PageSize, lastEventID)
 	if err != nil {
 		return nil, twirp.InternalErrorWith(err)
 	}
@@ -203,36 +211,6 @@ func (d *Datastore) ReadData(ctx context.Context, req *datastore.ReadRequest) (*
 		PageSize:       req.PageSize,
 		NextPageCursor: nextCursor,
 	}, nil
-}
-
-// DeleteData is our handler function that allows a client to delete data for a
-// specific user.
-func (d *Datastore) DeleteData(ctx context.Context, req *datastore.DeleteRequest) (*datastore.DeleteResponse, error) {
-	if req.UserUid == "" {
-		return nil, twirp.RequiredArgumentError("user_uid")
-	}
-
-	if d.verbose {
-		d.logger.Log("user_uid", req.UserUid, "msg", "DeleteData")
-	}
-
-	builder := sq.Delete("").
-		From("events").
-		Where(sq.Eq{"user_uid": req.UserUid})
-
-	sql, args, err := builder.ToSql()
-	if err != nil {
-		return nil, twirp.InternalErrorWith(err)
-	}
-
-	sql = d.DB.Rebind(sql)
-
-	_, err = d.DB.Exec(sql, args...)
-	if err != nil {
-		return nil, twirp.InternalErrorWith(err)
-	}
-
-	return &datastore.DeleteResponse{}, nil
 }
 
 // buildEncryptedEvent is a helper function that converts our internal event
@@ -246,7 +224,6 @@ func buildEncryptedEvent(e *event) (*datastore.EncryptedEvent, error) {
 	return &datastore.EncryptedEvent{
 		EventTime: timestamp,
 		Data:      e.Data,
-		EventId:   e.ID,
 	}, nil
 }
 
@@ -254,7 +231,7 @@ func buildEncryptedEvent(e *event) (*datastore.EncryptedEvent, error) {
 // more results to fetch (i.e. the number of events equals the page size), an
 // empty string if no results are possible (length of results is less than the
 // page size), or an error should we fail to generate the new cursor in any way.
-func encodeCursor(events []*datastore.EncryptedEvent, pageSize uint32) (string, error) {
+func encodeCursor(events []*datastore.EncryptedEvent, pageSize uint32, lastEventID int64) (string, error) {
 	if len(events) < int(pageSize) {
 		return "", nil
 	}
@@ -270,7 +247,7 @@ func encodeCursor(events []*datastore.EncryptedEvent, pageSize uint32) (string, 
 	// create non-empty cursor meaning the requestor can look for more pages
 	c := &cursor{
 		Timestamp: timestamp,
-		EventID:   lastEvent.EventId,
+		EventID:   lastEventID,
 	}
 
 	b, err := json.Marshal(c)
