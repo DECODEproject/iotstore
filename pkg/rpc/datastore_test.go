@@ -179,6 +179,11 @@ func TestPagination(t *testing.T) {
 	}{
 		{
 			publicKey: "abc123",
+			timestamp: "2018-05-01T07:59:59",
+			data:      []byte("first"),
+		},
+		{
+			publicKey: "abc123",
 			timestamp: "2018-05-01T08:00:00Z",
 			data:      []byte("first"),
 		},
@@ -195,6 +200,11 @@ func TestPagination(t *testing.T) {
 		{
 			publicKey: "abc123",
 			timestamp: "2018-05-01T08:02:00Z",
+			data:      []byte("fourth"),
+		},
+		{
+			publicKey: "abc123",
+			timestamp: "2018-05-01T08:04:00Z",
 			data:      []byte("fourth"),
 		},
 	}
