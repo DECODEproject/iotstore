@@ -172,3 +172,15 @@ container-clean: ## clean container artefacts
 .PHONY: bin-clean
 bin-clean: ## remove generated build artefacts
 	rm -rf .go bin .cache .coverage
+
+.PHONY: psql
+psql: ## open psql shell
+	@docker-compose -f .docker-compose-$(ARCH).yml \
+		run \
+		--rm \
+		-e "PGHOST=postgres" \
+		-e "PGUSER=iotstore" \
+		-e "PGPASSWORD=password" \
+		postgres \
+		psql \
+		iotstore_development
