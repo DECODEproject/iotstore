@@ -8,14 +8,13 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/thingful/iotstore/pkg/middleware"
-
 	kitlog "github.com/go-kit/kit/log"
 	twrpprom "github.com/joneskoo/twirp-serverhook-prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	goji "goji.io"
 	pat "goji.io/pat"
 
+	"github.com/thingful/iotstore/pkg/middleware"
 	"github.com/thingful/iotstore/pkg/rpc"
 	datastore "github.com/thingful/twirp-datastore-go"
 )
@@ -42,10 +41,9 @@ func NewServer(addr, connStr string, verbose bool, logger kitlog.Logger) *Server
 
 	twirpHandler := datastore.NewDatastoreServer(ds, hooks)
 
-	// multiplex twirp handler into a mux with another handler
 	mux := goji.NewMux()
 
-	mux.Handle(pat.Get(datastore.DatastorePathPrefix), twirpHandler)
+	mux.Handle(pat.Post(datastore.DatastorePathPrefix+"*"), twirpHandler)
 	mux.HandleFunc(pat.Get("/pulse"), PulseHandler)
 	mux.Handle(pat.Get("/metrics"), promhttp.Handler())
 
@@ -77,7 +75,14 @@ func (s *Server) Start() error {
 	signal.Notify(stopChan, os.Interrupt)
 
 	go func() {
-		s.logger.Log("listenAddr", s.srv.Addr, "msg", "starting server")
+		s.logger.Log(
+			"listenAddr",
+			s.srv.Addr,
+			"msg",
+			"starting server",
+			"pathPrefix",
+			datastore.DatastorePathPrefix,
+		)
 		if err := s.srv.ListenAndServe(); err != nil {
 			s.logger.Log("err", err)
 			os.Exit(1)

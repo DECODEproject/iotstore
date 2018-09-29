@@ -144,6 +144,11 @@ func (d *Datastore) ReadData(ctx context.Context, req *datastore.ReadRequest) (*
 		return nil, twirp.InvalidArgumentError("page_size", fmt.Sprintf("must be between 1 and %v", MaxPageSize))
 	}
 
+	startTime, endTime, err := extractTimes(req)
+	if err != nil {
+		return nil, err
+	}
+
 	if d.verbose {
 		d.logger.Log(
 			"publicKey", req.PublicKey,
@@ -156,7 +161,12 @@ func (d *Datastore) ReadData(ctx context.Context, req *datastore.ReadRequest) (*
 		From("events").
 		OrderBy("recorded_at ASC", "id ASC").
 		Where(sq.Eq{"public_key": req.PublicKey}).
+		Where(sq.GtOrEq{"recorded_at": startTime}).
 		Limit(uint64(req.PageSize))
+
+	if !endTime.IsZero() {
+		builder = builder.Where(sq.Lt{"recorded_at": endTime})
+	}
 
 	if req.PageCursor != "" {
 		// decode the cursor
@@ -274,4 +284,32 @@ func decodeCursor(in string) (*cursor, error) {
 	}
 
 	return &c, nil
+}
+
+// extractTimes extracts the start and end times from an incoming request,
+// converts the protobuf Timestamp instances into vanilla time.Time instances.
+// We return errors in the following cases: we are unable to convert either
+// timestamp into a time.Time, start_time is nil, end_time is before start_time.
+func extractTimes(req *datastore.ReadRequest) (startTime time.Time, endTime time.Time, err error) {
+	if req.StartTime == nil {
+		return startTime, endTime, twirp.RequiredArgumentError("start_time")
+	}
+
+	startTime, err = ptypes.Timestamp(req.StartTime)
+	if err != nil {
+		return startTime, endTime, twirp.InternalErrorWith(err)
+	}
+
+	if req.EndTime != nil {
+		endTime, err = ptypes.Timestamp(req.EndTime)
+		if err != nil {
+			return startTime, endTime, twirp.InternalErrorWith(err)
+		}
+
+		if endTime.Before(startTime) {
+			return startTime, endTime, twirp.InvalidArgumentError("end_time", "must be after start_time")
+		}
+	}
+
+	return startTime, endTime, nil
 }

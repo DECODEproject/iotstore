@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/protobuf/ptypes"
+
 	kitlog "github.com/go-kit/kit/log"
 	"github.com/stretchr/testify/assert"
 	datastore "github.com/thingful/twirp-datastore-go"
@@ -51,7 +53,10 @@ func TestRoundTrip(t *testing.T) {
 	ds := getTestDatastore(t)
 	defer ds.Stop()
 
-	_, err := ds.WriteData(context.Background(), &datastore.WriteRequest{
+	startTime, err := ptypes.TimestampProto(time.Now().Add(time.Hour * -1))
+	assert.Nil(t, err)
+
+	_, err = ds.WriteData(context.Background(), &datastore.WriteRequest{
 		PublicKey: "123abc",
 		Data:      []byte("hello world"),
 	})
@@ -64,6 +69,7 @@ func TestRoundTrip(t *testing.T) {
 
 	resp, err := ds.ReadData(context.Background(), &datastore.ReadRequest{
 		PublicKey: "123abc",
+		StartTime: startTime,
 	})
 	assert.Nil(t, err)
 	assert.Equal(t, "123abc", resp.PublicKey)
@@ -104,23 +110,46 @@ func TestReadDataInvalid(t *testing.T) {
 	ds := getTestDatastore(t)
 	defer ds.Stop()
 
+	now := time.Now()
+	startTime, _ := ptypes.TimestampProto(now)
+	invalidEndTime, _ := ptypes.TimestampProto(now.Add(time.Second * -1))
+
 	testcases := []struct {
 		label         string
 		request       *datastore.ReadRequest
 		expectedError string
 	}{
 		{
-			label:         "missing public_key",
-			request:       &datastore.ReadRequest{},
+			label: "missing public_key",
+			request: &datastore.ReadRequest{
+				StartTime: startTime,
+			},
 			expectedError: "twirp error invalid_argument: public_key is required",
 		},
 		{
 			label: "large page size",
 			request: &datastore.ReadRequest{
 				PublicKey: "123abc",
+				StartTime: startTime,
 				PageSize:  1001,
 			},
 			expectedError: "twirp error invalid_argument: page_size must be between 1 and 1000",
+		},
+		{
+			label: "missing start time",
+			request: &datastore.ReadRequest{
+				PublicKey: "123abc",
+			},
+			expectedError: "twirp error invalid_argument: start_time is required",
+		},
+		{
+			label: "end_time before start_time",
+			request: &datastore.ReadRequest{
+				PublicKey: "123abc",
+				StartTime: startTime,
+				EndTime:   invalidEndTime,
+			},
+			expectedError: "twirp error invalid_argument: end_time must be after start_time",
 		},
 	}
 
@@ -137,11 +166,22 @@ func TestPagination(t *testing.T) {
 	ds := getTestDatastore(t)
 	defer ds.Stop()
 
+	startTime, _ := time.Parse(time.RFC3339, "2018-05-01T08:00:00Z")
+	endTime, _ := time.Parse(time.RFC3339, "2018-05-01T08:03:00Z")
+
+	startTimestamp, _ := ptypes.TimestampProto(startTime)
+	endTimestamp, _ := ptypes.TimestampProto(endTime)
+
 	fixtures := []struct {
 		publicKey string
 		timestamp string
 		data      []byte
 	}{
+		{
+			publicKey: "abc123",
+			timestamp: "2018-05-01T07:59:59",
+			data:      []byte("first"),
+		},
 		{
 			publicKey: "abc123",
 			timestamp: "2018-05-01T08:00:00Z",
@@ -162,6 +202,11 @@ func TestPagination(t *testing.T) {
 			timestamp: "2018-05-01T08:02:00Z",
 			data:      []byte("fourth"),
 		},
+		{
+			publicKey: "abc123",
+			timestamp: "2018-05-01T08:04:00Z",
+			data:      []byte("fourth"),
+		},
 	}
 
 	// load fixtures into db
@@ -174,6 +219,8 @@ func TestPagination(t *testing.T) {
 	resp, err := ds.ReadData(context.Background(), &datastore.ReadRequest{
 		PublicKey: "abc123",
 		PageSize:  3,
+		StartTime: startTimestamp,
+		EndTime:   endTimestamp,
 	})
 
 	assert.Nil(t, err)
@@ -189,6 +236,8 @@ func TestPagination(t *testing.T) {
 		PublicKey:  "abc123",
 		PageSize:   3,
 		PageCursor: resp.NextPageCursor,
+		StartTime:  startTimestamp,
+		EndTime:    endTimestamp,
 	})
 
 	assert.Nil(t, err)
