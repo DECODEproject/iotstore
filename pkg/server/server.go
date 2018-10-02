@@ -19,12 +19,22 @@ import (
 	datastore "github.com/thingful/twirp-datastore-go"
 )
 
+// Config is a struct used to pass in configuration from the calling task
+type Config struct {
+	Addr     string
+	ConnStr  string
+	Verbose  bool
+	CertFile string
+	KeyFile  string
+}
+
 // Server is our top level type, contains all other components, is responsible
 // for starting and stopping them in the correct order.
 type Server struct {
 	srv    *http.Server
 	ds     *rpc.Datastore
 	logger kitlog.Logger
+	config *Config
 }
 
 // PulseHandler is the simplest possible handler function - used to expose an
@@ -35,23 +45,25 @@ func PulseHandler(rw http.ResponseWriter, req *http.Request) {
 }
 
 // NewServer returns a new simple HTTP server.
-func NewServer(addr, connStr string, verbose bool, logger kitlog.Logger) *Server {
-	ds := rpc.NewDatastore(connStr, verbose, logger)
+func NewServer(config *Config, logger kitlog.Logger) *Server {
+	ds := rpc.NewDatastore(config.ConnStr, config.Verbose, logger)
 	hooks := twrpprom.NewServerHooks(nil)
 
 	twirpHandler := datastore.NewDatastoreServer(ds, hooks)
 
 	mux := goji.NewMux()
 
+	// set up the handlers
 	mux.Handle(pat.Post(datastore.DatastorePathPrefix+"*"), twirpHandler)
 	mux.HandleFunc(pat.Get("/pulse"), PulseHandler)
 	mux.Handle(pat.Get("/metrics"), promhttp.Handler())
 
+	// add our middleware
 	mux.Use(middleware.RequestIDMiddleware)
 
 	// create our http.Server instance
 	srv := &http.Server{
-		Addr:    addr,
+		Addr:    config.Addr,
 		Handler: mux,
 	}
 
@@ -60,6 +72,7 @@ func NewServer(addr, connStr string, verbose bool, logger kitlog.Logger) *Server
 		srv:    srv,
 		ds:     ds,
 		logger: kitlog.With(logger, "module", "server"),
+		config: config,
 	}
 }
 
@@ -82,10 +95,20 @@ func (s *Server) Start() error {
 			"starting server",
 			"pathPrefix",
 			datastore.DatastorePathPrefix,
+			"tlsEnabled",
+			isTLSEnabled(s.config),
 		)
-		if err := s.srv.ListenAndServe(); err != nil {
-			s.logger.Log("err", err)
-			os.Exit(1)
+
+		if isTLSEnabled(s.config) {
+			if err := s.srv.ListenAndServeTLS(s.config.CertFile, s.config.KeyFile); err != nil {
+				s.logger.Log("err", err)
+				os.Exit(1)
+			}
+		} else {
+			if err := s.srv.ListenAndServe(); err != nil {
+				s.logger.Log("err", err)
+				os.Exit(1)
+			}
 		}
 	}()
 
@@ -105,4 +128,10 @@ func (s *Server) Stop() error {
 	}
 
 	return s.srv.Shutdown(ctx)
+}
+
+// isTLSEnabled returns true if the passed in configuration object contains both
+// a cert and key file paths, false otherwise.
+func isTLSEnabled(config *Config) bool {
+	return config.CertFile != "" && config.KeyFile != ""
 }

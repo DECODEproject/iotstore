@@ -10,8 +10,10 @@ import (
 func init() {
 	rootCmd.AddCommand(serverCmd)
 
-	serverCmd.Flags().StringP("addr", "a", "0.0.0.0:8080", "Specify the address to which the server binds")
+	serverCmd.Flags().StringP("addr", "a", "0.0.0.0:8080", "The address to which the server binds")
 	serverCmd.Flags().Bool("verbose", false, "Enable verbose output")
+	serverCmd.Flags().StringP("cert-file", "c", "", "The path to a TLS certificate file to enable TLS on the server")
+	serverCmd.Flags().StringP("key-file", "k", "", "The path to a TLS private key file to enable TLS on the server")
 }
 
 var serverCmd = &cobra.Command{
@@ -41,9 +43,28 @@ clients unable to use the Protocol Buffer API.`,
 			return err
 		}
 
+		certFile, err := cmd.Flags().GetString("cert-file")
+		if err != nil {
+			return err
+		}
+
+		keyFile, err := cmd.Flags().GetString("key-file")
+		if err != nil {
+			return err
+		}
+
 		logger := logger.NewLogger()
 
-		s := server.NewServer(addr, datasource, verbose, logger)
+		s := server.NewServer(
+			&server.Config{
+				Addr:     addr,
+				ConnStr:  datasource,
+				Verbose:  verbose,
+				CertFile: certFile,
+				KeyFile:  keyFile,
+			},
+			logger,
+		)
 
 		return s.Start()
 	},
