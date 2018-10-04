@@ -26,9 +26,14 @@ meaning this datastore has no visibility of the data being persisted.
 	Version: version.VersionString(),
 }
 
+// Execute is the entrypoint to our root command, called from main.go
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+}
+
+func init() {
+	rootCmd.PersistentFlags().Bool("verbose", false, "Enable verbose output")
 }
