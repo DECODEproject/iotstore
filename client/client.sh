@@ -6,67 +6,35 @@ set -euo pipefail
 # via Curl just for quick local sanity checking. Requires base64, curl and jq
 # tools installed and available on the current $PATH to run.
 
-hello=$(echo hello | base64)
-world=$(echo world | base64)
+datastore_base="http://localhost:8080/twirp/decode.iot.datastore.Datastore/"
 
-echo "--> write some data for alice for public key abc123"
-curl --request "POST" \
-     --location "http://localhost:8080/twirp/datastore.Datastore/WriteData" \
-     --header "Content-Type: application/json" \
-     --silent \
-     --data "{\"public_key\":\"abc123\",\"data\":\"$hello\"}" \
-     | jq "."
+function write_data {
+  data=$(echo "$2" | base64)
 
-curl --request "POST" \
-     --location "http://localhost:8080/twirp/datastore.Datastore/WriteData" \
-     --header "Content-Type: application/json" \
-     --silent \
-     --data "{\"public_key\":\"abc123\",\"data\":\"$world\"}" \
-     | jq "."
+  echo "--> write some data for alice for public key $1"
+  curl --request "POST" \
+       --location "${datastore_base}WriteData" \
+       --header "Content-Type: application/json" \
+       --silent \
+       --data "{\"public_key\":\"${1}\",\"data\":\"${data}\"}" \
+       | jq "."
+}
 
-echo "--> write some data for bob for public key abc123"
-curl --request "POST" \
-     --location "http://localhost:8080/twirp/datastore.Datastore/WriteData" \
-     --header "Content-Type: application/json" \
-     --silent \
-     --data "{\"public_key\":\"abc123\",\"data\":\"$hello\"}" \
-     | jq "."
+function read_data {
+  start_time=$(date -d '1 hour ago' +%Y-%m-%dT%H:%M:%SZ)
+  echo "$start_time"
 
-curl --request "POST" \
-     --location "http://localhost:8080/twirp/datastore.Datastore/WriteData" \
-     --header "Content-Type: application/json" \
-     --silent \
-     --data "{\"public_key\":\"abc123\",\"data\":\"$world\"}" \
-     | jq "."
+  echo "--> read data for public_key $1"
+  curl --request "POST" \
+       --location "${datastore_base}ReadData" \
+       --header "Content-Type: application/json" \
+       --silent \
+       --data "{\"public_key\":\"${1}\", \"page_size\":3, \"start_time\": \"${start_time}\"}" \
+       | jq "."
+}
 
-echo "--> read all data for public_key abc123"
-curl --request "POST" \
-     --location "http://localhost:8080/twirp/datastore.Datastore/ReadData" \
-     --header "Content-Type: application/json" \
-     --silent \
-     --data '{"public_key":"abc123", "page_size":3}' \
-     | jq "."
+for i in {1..10}; do
+  write_data abc123 "hello${i}"
+done
 
-echo "--> capture next page cursor"
-cursor=$(curl --request "POST" \
-     --location "http://localhost:8080/twirp/datastore.Datastore/ReadData" \
-     --header "Content-Type: application/json" \
-     --silent \
-     --data '{"public_key":"abc123", "page_size":3}' \
-     | jq -r ".next_page_cursor")
-
-echo "-- read next page of data for abc123"
-curl --request "POST" \
-     --location "http://localhost:8080/twirp/datastore.Datastore/ReadData" \
-     --header "Content-Type: application/json" \
-     --silent \
-     --data "{\"public_key\":\"abc123\",\"page_size\":3,\"page_cursor\":\"$cursor\"}" \
-     | jq "."
-
-echo "--> read all data for public_key abc123 again"
-curl --request "POST" \
-     --location "http://localhost:8080/twirp/datastore.Datastore/ReadData" \
-     --header "Content-Type: application/json" \
-     --silent \
-     --data '{"public_key":"abc123"}' \
-     | jq "."
+read_data abc123

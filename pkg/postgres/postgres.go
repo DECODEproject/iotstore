@@ -6,6 +6,7 @@ import (
 	"time"
 
 	sq "github.com/elgris/sqrl"
+	raven "github.com/getsentry/raven-go"
 	kitlog "github.com/go-kit/kit/log"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq" // required way of importing pq
@@ -98,11 +99,13 @@ func (d *DB) WriteData(publicKey string, data []byte) error {
 
 	sql, args, err := d.DB.BindNamed(sql, mapArgs)
 	if err != nil {
+		raven.CaptureError(err, map[string]string{"operation": "writeData"})
 		return errors.Wrap(err, "failed to bind named query")
 	}
 
 	_, err = d.DB.Exec(sql, args...)
 	if err != nil {
+		raven.CaptureError(err, map[string]string{"operation": "writeData"})
 		return errors.Wrap(err, "failed to execute write query")
 	}
 
@@ -126,6 +129,7 @@ func (d *DB) ReadData(publicKey string, pageSize uint64, startTime, endTime time
 	if pageCursor != "" {
 		cursor, err := decodeCursor(pageCursor)
 		if err != nil {
+			raven.CaptureError(err, map[string]string{"operation": "readData"})
 			return nil, errors.Wrap(err, "failed to decode page cursor")
 		}
 		builder = builder.Where(sq.GtOrEq{"recorded_at": cursor.Timestamp}).Where(sq.Gt{"id": cursor.EventID})
@@ -133,6 +137,7 @@ func (d *DB) ReadData(publicKey string, pageSize uint64, startTime, endTime time
 
 	sql, args, err := builder.ToSql()
 	if err != nil {
+		raven.CaptureError(err, map[string]string{"operation": "readData"})
 		return nil, errors.Wrap(err, "failed to build sql query")
 	}
 
@@ -140,6 +145,7 @@ func (d *DB) ReadData(publicKey string, pageSize uint64, startTime, endTime time
 
 	rows, err := d.DB.Queryx(sql, args...)
 	if err != nil {
+		raven.CaptureError(err, map[string]string{"operation": "readData"})
 		return nil, errors.Wrap(err, "failed to execute query")
 	}
 
@@ -149,6 +155,7 @@ func (d *DB) ReadData(publicKey string, pageSize uint64, startTime, endTime time
 		var e Event
 		err = rows.StructScan(&e)
 		if err != nil {
+			raven.CaptureError(err, map[string]string{"operation": "readData"})
 			return nil, errors.Wrap(err, "failed to populate Event type")
 		}
 		events = append(events, &e)
