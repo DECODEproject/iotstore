@@ -1,10 +1,12 @@
 package tasks
 
 import (
+	"github.com/getsentry/raven-go"
 	"github.com/spf13/cobra"
 
 	"github.com/thingful/iotstore/pkg/logger"
 	"github.com/thingful/iotstore/pkg/server"
+	"github.com/thingful/iotstore/pkg/version"
 )
 
 func init() {
@@ -13,6 +15,9 @@ func init() {
 	serverCmd.Flags().StringP("addr", "a", "0.0.0.0:8080", "The address to which the server binds")
 	serverCmd.Flags().StringP("cert-file", "c", "", "The path to a TLS certificate file to enable TLS on the server")
 	serverCmd.Flags().StringP("key-file", "k", "", "The path to a TLS private key file to enable TLS on the server")
+
+	raven.SetRelease(version.Version)
+	raven.SetTagsContext(map[string]string{"component": "datastore"})
 }
 
 var serverCmd = &cobra.Command{
