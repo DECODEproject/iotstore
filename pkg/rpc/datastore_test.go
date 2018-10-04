@@ -6,85 +6,82 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/protobuf/ptypes"
-
 	kitlog "github.com/go-kit/kit/log"
+	"github.com/golang/protobuf/ptypes"
 	"github.com/stretchr/testify/assert"
-	datastore "github.com/thingful/twirp-datastore-go"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/thingful/iotstore/pkg/postgres"
 	"github.com/thingful/iotstore/pkg/rpc"
+	datastore "github.com/thingful/twirp-datastore-go"
 )
 
-// getTestDatastore is a helper function that returns a datastore, and also does
-// some housekeeping to clean the DB by rolling back and reapplying migrations.
-//
-// TODO: not terribly happy with this as an approach. See if we can think of an
-// alternative.
-func getTestDatastore(t *testing.T) *rpc.Datastore {
-	t.Helper()
+type DatastoreSuite struct {
+	suite.Suite
+	ds *rpc.Datastore
+}
 
+func (s *DatastoreSuite) SetupTest() {
 	logger := kitlog.NewNopLogger()
 	connStr := os.Getenv("IOTSTORE_DATABASE_URL")
 
-	// create datastore
-	ds := rpc.NewDatastore(connStr, true, logger)
-
-	// start the datastore (this runs all migrations slightly annoyingly)
-	err := ds.Start()
+	db, err := postgres.Open(connStr)
 	if err != nil {
-		t.Fatalf("Error starting datastore: %v", err)
+		s.T().Fatalf("Failed to open db connection: %v", err)
 	}
 
-	err = postgres.MigrateDownAll(ds.DB.DB, logger)
+	err = postgres.MigrateDownAll(db.DB, logger)
 	if err != nil {
-		t.Fatalf("Error running down migrations: %v", err)
+		s.T().Fatalf("Failed to run down migrations: %v", err)
 	}
 
-	err = postgres.MigrateUp(ds.DB.DB, logger)
+	err = db.Close()
 	if err != nil {
-		t.Fatalf("Error running down migrations: %v", err)
+		s.T().Fatalf("Failed to close DB: %v", err)
 	}
 
-	return ds
+	s.ds = rpc.NewDatastore(connStr, true, logger)
+
+	err = s.ds.Start()
+	if err != nil {
+		s.T().Fatalf("Failed to start datsatore: %v", err)
+	}
 }
 
-func TestRoundTrip(t *testing.T) {
-	ds := getTestDatastore(t)
-	defer ds.Stop()
+func (s *DatastoreSuite) TearDownTest() {
+	err := s.ds.Stop()
+	if err != nil {
+		s.T().Fatalf("Failed to stop datastore: %v", err)
+	}
+}
 
+func (s *DatastoreSuite) TestRoundTrip() {
+	publicKey := "abc123"
 	startTime, err := ptypes.TimestampProto(time.Now().Add(time.Hour * -1))
-	assert.Nil(t, err)
+	assert.Nil(s.T(), err)
 
-	_, err = ds.WriteData(context.Background(), &datastore.WriteRequest{
-		PublicKey: "123abc",
+	_, err = s.ds.WriteData(context.Background(), &datastore.WriteRequest{
+		PublicKey: publicKey,
 		Data:      []byte("hello world"),
 	})
-	assert.Nil(t, err)
+	assert.Nil(s.T(), err)
 
-	var count int
-	err = ds.DB.Get(&count, ds.DB.Rebind("SELECT COUNT(*) FROM events WHERE public_key = ?"), "123abc")
-	assert.Nil(t, err)
-	assert.Equal(t, 1, count)
-
-	resp, err := ds.ReadData(context.Background(), &datastore.ReadRequest{
-		PublicKey: "123abc",
+	resp, err := s.ds.ReadData(context.Background(), &datastore.ReadRequest{
+		PublicKey: publicKey,
 		StartTime: startTime,
 	})
-	assert.Nil(t, err)
-	assert.Equal(t, "123abc", resp.PublicKey)
-	assert.Len(t, resp.Events, 1)
-	assert.Equal(t, int(rpc.DefaultPageSize), int(resp.PageSize))
-	assert.Equal(t, "", resp.NextPageCursor)
+
+	assert.Nil(s.T(), err)
+	assert.Equal(s.T(), publicKey, resp.PublicKey)
+	assert.Len(s.T(), resp.Events, 1)
+	assert.Equal(s.T(), int(rpc.DefaultPageSize), int(resp.PageSize))
+	assert.Equal(s.T(), "", resp.NextPageCursor)
 
 	event := resp.Events[0]
-	assert.Equal(t, []byte("hello world"), event.Data)
+	assert.Equal(s.T(), []byte("hello world"), event.Data)
 }
 
-func TestWriteDataInvalid(t *testing.T) {
-	ds := getTestDatastore(t)
-	defer ds.Stop()
-
+func (s *DatastoreSuite) TestWriteDataInvalid() {
 	testcases := []struct {
 		label         string
 		request       *datastore.WriteRequest
@@ -98,18 +95,15 @@ func TestWriteDataInvalid(t *testing.T) {
 	}
 
 	for _, tc := range testcases {
-		t.Run(tc.label, func(t *testing.T) {
-			_, err := ds.WriteData(context.Background(), tc.request)
+		s.T().Run(tc.label, func(t *testing.T) {
+			_, err := s.ds.WriteData(context.Background(), tc.request)
 			assert.NotNil(t, err)
 			assert.Equal(t, tc.expectedError, err.Error())
 		})
 	}
 }
 
-func TestReadDataInvalid(t *testing.T) {
-	ds := getTestDatastore(t)
-	defer ds.Stop()
-
+func (s *DatastoreSuite) TestReadDataInvalid() {
 	now := time.Now()
 	startTime, _ := ptypes.TimestampProto(now)
 	invalidEndTime, _ := ptypes.TimestampProto(now.Add(time.Second * -1))
@@ -154,18 +148,15 @@ func TestReadDataInvalid(t *testing.T) {
 	}
 
 	for _, tc := range testcases {
-		t.Run(tc.label, func(t *testing.T) {
-			_, err := ds.ReadData(context.Background(), tc.request)
+		s.T().Run(tc.label, func(t *testing.T) {
+			_, err := s.ds.ReadData(context.Background(), tc.request)
 			assert.NotNil(t, err)
 			assert.Equal(t, tc.expectedError, err.Error())
 		})
 	}
 }
 
-func TestPagination(t *testing.T) {
-	ds := getTestDatastore(t)
-	defer ds.Stop()
-
+func (s *DatastoreSuite) TestPagination() {
 	startTime, _ := time.Parse(time.RFC3339, "2018-05-01T08:00:00Z")
 	endTime, _ := time.Parse(time.RFC3339, "2018-05-01T08:03:00Z")
 
@@ -213,26 +204,26 @@ func TestPagination(t *testing.T) {
 	for _, f := range fixtures {
 		ts, _ := time.Parse(time.RFC3339, f.timestamp)
 
-		ds.DB.MustExec("INSERT INTO events (public_key, recorded_at, data) VALUES ($1, $2, $3)", f.publicKey, ts, f.data)
+		s.ds.DB.DB.MustExec("INSERT INTO events (public_key, recorded_at, data) VALUES ($1, $2, $3)", f.publicKey, ts, f.data)
 	}
 
-	resp, err := ds.ReadData(context.Background(), &datastore.ReadRequest{
+	resp, err := s.ds.ReadData(context.Background(), &datastore.ReadRequest{
 		PublicKey: "abc123",
 		PageSize:  3,
 		StartTime: startTimestamp,
 		EndTime:   endTimestamp,
 	})
 
-	assert.Nil(t, err)
-	assert.Equal(t, "abc123", resp.PublicKey)
-	assert.Len(t, resp.Events, 3)
-	assert.NotEqual(t, "", resp.NextPageCursor)
+	assert.Nil(s.T(), err)
+	assert.Equal(s.T(), "abc123", resp.PublicKey)
+	assert.Len(s.T(), resp.Events, 3)
+	assert.NotEqual(s.T(), "", resp.NextPageCursor)
 
-	assert.Equal(t, "first", string(resp.Events[0].Data))
-	assert.Equal(t, "second", string(resp.Events[1].Data))
-	assert.Equal(t, "third", string(resp.Events[2].Data))
+	assert.Equal(s.T(), "first", string(resp.Events[0].Data))
+	assert.Equal(s.T(), "second", string(resp.Events[1].Data))
+	assert.Equal(s.T(), "third", string(resp.Events[2].Data))
 
-	resp, err = ds.ReadData(context.Background(), &datastore.ReadRequest{
+	resp, err = s.ds.ReadData(context.Background(), &datastore.ReadRequest{
 		PublicKey:  "abc123",
 		PageSize:   3,
 		PageCursor: resp.NextPageCursor,
@@ -240,7 +231,11 @@ func TestPagination(t *testing.T) {
 		EndTime:    endTimestamp,
 	})
 
-	assert.Nil(t, err)
-	assert.Len(t, resp.Events, 1)
-	assert.Equal(t, "", resp.NextPageCursor)
+	assert.Nil(s.T(), err)
+	assert.Len(s.T(), resp.Events, 1)
+	assert.Equal(s.T(), "", resp.NextPageCursor)
+}
+
+func TestDatastoreSuite(t *testing.T) {
+	suite.Run(t, new(DatastoreSuite))
 }
