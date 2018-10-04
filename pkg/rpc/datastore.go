@@ -7,11 +7,8 @@ import (
 	"fmt"
 	"time"
 
-	sq "github.com/elgris/sqrl"
 	kitlog "github.com/go-kit/kit/log"
 	"github.com/golang/protobuf/ptypes"
-	"github.com/jmoiron/sqlx"
-	"github.com/pkg/errors"
 	datastore "github.com/thingful/twirp-datastore-go"
 	"github.com/twitchtv/twirp"
 
@@ -31,8 +28,7 @@ const (
 // Datastore is our implementation of the generated twirp interface for the
 // encrypted datastore.
 type Datastore struct {
-	DB      *sqlx.DB
-	connStr string
+	DB      *postgres.DB
 	logger  kitlog.Logger
 	verbose bool
 }
@@ -40,27 +36,16 @@ type Datastore struct {
 // ensure we adhere to the interface
 var _ datastore.Datastore = &Datastore{}
 
-// event is an internal type used when pulling records from the database.
-type event struct {
-	ID         int64     `db:"id"`
-	RecordedAt time.Time `db:"recorded_at"`
-	Data       []byte    `db:"data"`
-}
-
-// cursor is an internal type used when paginating.
-type cursor struct {
-	EventID   int64     `json:"eventID"`
-	Timestamp time.Time `json:"timestamp"`
-}
-
 // NewDatastore returns a newly instantiated Datastore instance. It takes as
 // parameters a DB connection string and a logger. The connection string is
 // passed down to the postgres package where it is used to connect.
 func NewDatastore(connStr string, verbose bool, logger kitlog.Logger) *Datastore {
+	db := postgres.NewDB(connStr, verbose, logger)
+
 	logger = kitlog.With(logger, "module", "rpc")
 
 	ds := &Datastore{
-		connStr: connStr,
+		DB:      db,
 		logger:  logger,
 		verbose: verbose,
 	}
@@ -72,26 +57,14 @@ func NewDatastore(connStr string, verbose bool, logger kitlog.Logger) *Datastore
 func (d *Datastore) Start() error {
 	d.logger.Log("msg", "starting datastore")
 
-	db, err := postgres.Open(d.connStr)
-	if err != nil {
-		return errors.Wrap(err, "opening db connection failed")
-	}
-
-	d.DB = db
-
-	err = postgres.MigrateUp(d.DB.DB, d.logger)
-	if err != nil {
-		return errors.Wrap(err, "running up migrations failed")
-	}
-
-	return nil
+	return d.DB.Start()
 }
 
 // Stop stops all child components.
 func (d *Datastore) Stop() error {
 	d.logger.Log("msg", "stopping datastore")
 
-	return d.DB.Close()
+	return d.DB.Stop()
 }
 
 // WriteData is the method by which data is written into the datastore. It
@@ -111,16 +84,7 @@ func (d *Datastore) WriteData(ctx context.Context, req *datastore.WriteRequest) 
 		)
 	}
 
-	sql, args, err := sq.Insert("events").Columns("public_key", "data").
-		Values(req.PublicKey, req.Data).ToSql()
-
-	if err != nil {
-		return nil, twirp.InternalErrorWith(err)
-	}
-
-	sql = d.DB.Rebind(sql)
-
-	_, err = d.DB.Exec(sql, args...)
+	err := d.DB.WriteData(req.PublicKey, req.Data)
 	if err != nil {
 		return nil, twirp.InternalErrorWith(err)
 	}
@@ -151,41 +115,15 @@ func (d *Datastore) ReadData(ctx context.Context, req *datastore.ReadRequest) (*
 
 	if d.verbose {
 		d.logger.Log(
+			"msg", "ReadData",
 			"publicKey", req.PublicKey,
 			"pageSize", req.PageSize,
-			"msg", "ReadData",
+			"startTime", startTime,
+			"endTime", endTime,
 		)
 	}
 
-	builder := sq.Select("id", "recorded_at", "data").
-		From("events").
-		OrderBy("recorded_at ASC", "id ASC").
-		Where(sq.Eq{"public_key": req.PublicKey}).
-		Where(sq.GtOrEq{"recorded_at": startTime}).
-		Limit(uint64(req.PageSize))
-
-	if !endTime.IsZero() {
-		builder = builder.Where(sq.Lt{"recorded_at": endTime})
-	}
-
-	if req.PageCursor != "" {
-		// decode the cursor
-		c, err := decodeCursor(req.PageCursor)
-		if err != nil {
-			return nil, twirp.InternalErrorWith(err)
-		}
-
-		builder = builder.Where(sq.GtOrEq{"recorded_at": c.Timestamp}).Where(sq.Gt{"id": c.EventID})
-	}
-
-	sql, args, err := builder.ToSql()
-	if err != nil {
-		return nil, twirp.InternalErrorWith(err)
-	}
-
-	sql = d.DB.Rebind(sql)
-
-	rows, err := d.DB.Queryx(sql, args...)
+	rawEvents, err := d.DB.ReadData(req.PublicKey, uint64(req.PageSize), startTime, endTime, req.PageCursor)
 	if err != nil {
 		return nil, twirp.InternalErrorWith(err)
 	}
@@ -193,21 +131,15 @@ func (d *Datastore) ReadData(ctx context.Context, req *datastore.ReadRequest) (*
 	events := []*datastore.EncryptedEvent{}
 	var lastEventID int64
 
-	for rows.Next() {
-		var e event
-		err = rows.StructScan(&e)
+	for _, raw := range rawEvents {
+		lastEventID = raw.ID
+
+		event, err := buildEncryptedEvent(raw)
 		if err != nil {
 			return nil, twirp.InternalErrorWith(err)
 		}
 
-		lastEventID = e.ID
-
-		ev, err := buildEncryptedEvent(&e)
-		if err != nil {
-			return nil, twirp.InternalErrorWith(err)
-		}
-
-		events = append(events, ev)
+		events = append(events, event)
 	}
 
 	nextCursor, err := encodeCursor(events, req.PageSize, lastEventID)
@@ -225,7 +157,7 @@ func (d *Datastore) ReadData(ctx context.Context, req *datastore.ReadRequest) (*
 
 // buildEncryptedEvent is a helper function that converts our internal event
 // type read from the database into an external datastore.EncryptedEvent.
-func buildEncryptedEvent(e *event) (*datastore.EncryptedEvent, error) {
+func buildEncryptedEvent(e *postgres.Event) (*datastore.EncryptedEvent, error) {
 	timestamp, err := ptypes.TimestampProto(e.RecordedAt)
 	if err != nil {
 		return nil, err
@@ -255,7 +187,7 @@ func encodeCursor(events []*datastore.EncryptedEvent, pageSize uint32, lastEvent
 	}
 
 	// create non-empty cursor meaning the requestor can look for more pages
-	c := &cursor{
+	c := &postgres.Cursor{
 		Timestamp: timestamp,
 		EventID:   lastEventID,
 	}
@@ -266,24 +198,6 @@ func encodeCursor(events []*datastore.EncryptedEvent, pageSize uint32, lastEvent
 	}
 
 	return base64.StdEncoding.EncodeToString(b), nil
-}
-
-// decodeCursor is a helper function that takes our cursor string if set, then
-// reverses the encoding process which here is decoding the base64 string, and
-// then parsing the JSON into our cursor type.
-func decodeCursor(in string) (*cursor, error) {
-	b, err := base64.StdEncoding.DecodeString(in)
-	if err != nil {
-		return nil, err
-	}
-
-	var c cursor
-	err = json.Unmarshal(b, &c)
-	if err != nil {
-		return nil, err
-	}
-
-	return &c, nil
 }
 
 // extractTimes extracts the start and end times from an incoming request,

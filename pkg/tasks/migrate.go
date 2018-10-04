@@ -62,7 +62,7 @@ takes as parameters: the number of steps to rollback (default 1), or a
 boolean flag (--all) indicating we should rollback all migrations. The
 default is to simply rollback one migration.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		datasource, err := GetFromEnv(DatabaseURLKey)
+		connStr, err := GetFromEnv(ConnStrKey)
 		if err != nil {
 			return err
 		}
@@ -79,7 +79,7 @@ default is to simply rollback one migration.`,
 
 		logger := logger.NewLogger()
 
-		db, err := postgres.Open(datasource)
+		db, err := postgres.Open(connStr)
 		if err != nil {
 			return err
 		}

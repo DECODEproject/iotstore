@@ -11,7 +11,6 @@ func init() {
 	rootCmd.AddCommand(serverCmd)
 
 	serverCmd.Flags().StringP("addr", "a", "0.0.0.0:8080", "The address to which the server binds")
-	serverCmd.Flags().Bool("verbose", false, "Enable verbose output")
 	serverCmd.Flags().StringP("cert-file", "c", "", "The path to a TLS certificate file to enable TLS on the server")
 	serverCmd.Flags().StringP("key-file", "k", "", "The path to a TLS private key file to enable TLS on the server")
 }
