@@ -140,6 +140,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:b56b2ed444cd3811c3c2837b2509b421b0fb631cdffd145a92e17eaccbdb9660"
+  name = "github.com/lestrrat-go/backoff"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "828830ec1d9a363a7891cc6924f1acbebc62ecce"
+
+[[projects]]
+  branch = "master"
   digest = "1:8ef506fc2bb9ced9b151dafa592d4046063d744c646c1bbe801982ce87e4bc24"
   name = "github.com/lib/pq"
   packages = [
@@ -300,6 +308,7 @@
     "github.com/google/uuid",
     "github.com/jmoiron/sqlx",
     "github.com/joneskoo/twirp-serverhook-prometheus",
+    "github.com/lestrrat-go/backoff",
     "github.com/lib/pq",
     "github.com/pkg/errors",
     "github.com/prometheus/client_golang/prometheus/promhttp",
