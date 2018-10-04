@@ -31,9 +31,6 @@ func (s *DatastoreSuite) SetupTest() {
 	}
 
 	postgres.MigrateDownAll(db.DB, logger)
-	//if err != nil {
-	//	s.T().Fatalf("Failed to run down migrations: %v", err)
-	//}
 
 	err = db.Close()
 	if err != nil {
