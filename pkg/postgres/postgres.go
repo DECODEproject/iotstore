@@ -31,6 +31,8 @@ type Cursor struct {
 	Timestamp time.Time `json:"timestamp"`
 }
 
+// DB is a struct that wraps an sqlx.DB instance that exposes some methods to
+// read and write data.
 type DB struct {
 	DB *sqlx.DB
 
@@ -39,6 +41,10 @@ type DB struct {
 	logger  kitlog.Logger
 }
 
+// NewDB is a constructor that returns a new DB instance for the given
+// configuration. We pass in a connection string for the database, and in
+// addition we can pass in a verbose flag which causes the binary to output more
+// verbose log information.
 func NewDB(connStr string, verbose bool, logger kitlog.Logger) *DB {
 	logger = kitlog.With(logger, "module", "postgres")
 
@@ -51,6 +57,7 @@ func NewDB(connStr string, verbose bool, logger kitlog.Logger) *DB {
 	return db
 }
 
+// Start connects to the database, and runs any pending up migrations.
 func (d *DB) Start() error {
 	d.logger.Log("msg", "starting postgres connection")
 
@@ -69,6 +76,7 @@ func (d *DB) Start() error {
 	return nil
 }
 
+// Stop terminates the DB connection, closing the pool of connections.
 func (d *DB) Stop() error {
 	d.logger.Log("msg", "stopping postgres connection")
 
@@ -151,10 +159,11 @@ func (d *DB) ReadData(publicKey string, pageSize uint64, startTime, endTime time
 
 // DeleteData takes as input a timestamp, and after it is executed will have
 // deleted all events in the database from before the submitted time interval
-// for any policy. This function also takes a dryRun parameter. If set to true
-// the delete operation is performed but without committing the transaction.
-// This allows a caller to see how many events would be deleted.
-func (d *DB) DeleteData(before time.Time, dryRun bool) error {
+// for any policy. This function also takes a `execute` parameter. If set to
+// true the delete operation is performed and committed, but if set to false it
+// is executed without committing the transaction. This allows a caller to see
+// how many events would be deleted.
+func (d *DB) DeleteData(before time.Time, execute bool) error {
 	sql := `WITH deleted AS
 		(DELETE FROM events WHERE recorded_at < ? RETURNING *)
 		SELECT COUNT(*) FROM deleted`
@@ -166,7 +175,7 @@ func (d *DB) DeleteData(before time.Time, dryRun bool) error {
 			"msg", "deleting old events",
 			"sql", sql,
 			"before", before.Format(time.RFC3339),
-			"dryRun", dryRun,
+			"execute", execute,
 		)
 	}
 
@@ -182,9 +191,9 @@ func (d *DB) DeleteData(before time.Time, dryRun bool) error {
 		return errors.Wrap(err, "failed to execute delete query")
 	}
 
-	d.logger.Log("msg", "deleted old events", "count", count, "dryRun", dryRun)
+	d.logger.Log("msg", "deleted old events", "count", count, "execute", execute)
 
-	if dryRun {
+	if !execute {
 		return tx.Rollback()
 	}
 

@@ -36,7 +36,7 @@ func (s *PostgresSuite) SetupTest() {
 		s.T().Fatalf("Failed to close DB: %v", err)
 	}
 
-	s.db = postgres.NewDB(connStr, false, logger)
+	s.db = postgres.NewDB(connStr, true, logger)
 
 	err = s.db.Start()
 	if err != nil {
@@ -62,14 +62,14 @@ func (s *PostgresSuite) TestRoundTrip() {
 	event := events[0]
 	assert.Equal(s.T(), []byte("encrypted bytes"), event.Data)
 
-	err = s.db.DeleteData(time.Now(), true)
+	err = s.db.DeleteData(time.Now(), false)
 	assert.Nil(s.T(), err)
 
 	events, err = s.db.ReadData(publicKey, 50, startTime, time.Time{}, "")
 	assert.Nil(s.T(), err)
 	assert.Len(s.T(), events, 1)
 
-	err = s.db.DeleteData(time.Now(), false)
+	err = s.db.DeleteData(time.Now(), true)
 	assert.Nil(s.T(), err)
 
 	events, err = s.db.ReadData(publicKey, 50, startTime, time.Time{}, "")
