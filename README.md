@@ -38,3 +38,45 @@ curl to exercise the basic functions of the API. The script inserts 4
 entries, then paginates through them, before deleting all inserted data. The
 purpose of this script is just to sanity check the functionality from the
 command line.
+
+## How to use the image
+
+To use the image it needs to have access to a PostgreSQL server in order to
+persist incoming data. This may be an existing server on your machine, but
+the simplest way to run the image is via docker compose. An example compose
+file is shown below:
+
+```yaml
+version: '3'
+services:
+  postgres:
+    image: postgres:10-alpine
+    ports:
+      - "5432:5432"
+    restart: always
+    volumes:
+      - postgres_vol:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_USER=decode
+      - POSTGRES_DB=postgres
+
+  datastore:
+    image: thingful/iotstore-amd64:v0.0.9-dirty
+    ports:
+      - "8080:8080"
+    restart: always
+    environment:
+      - IOTSTORE_DATABASE_URL=postgres://decode:password@postgres:5432/postgres?sslmode=disable
+    depends_on:
+      - postgres
+    command: [ "server", "--verbose" ]
+
+volumes:
+  postgres_vol:
+```
+
+The above compose file starts postgresql and the datastore containers running
+in verbose mode using the default postgres system database. We will need to a
+little more work to run with other services, but this will let you test out
+the basic operations of the datastore.
