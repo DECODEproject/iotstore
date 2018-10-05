@@ -87,55 +87,10 @@ func (s *PostgresSuite) TestReadWithEndTime() {
 	assert.Len(s.T(), events, 0)
 }
 
-//func (s *PostgresSuite) TestPagination() {
-//	//startTime, _ := time.Parse(time.RFC3339, "2018-05-01T08:00:00Z")
-//	//endTime, _ := time.Parse(time.RFC3339, "2018-05-01T08:03:00Z")
-//	publicKey := "abc123"
-//
-//	fixtures := []struct {
-//		publicKey string
-//		timestamp string
-//		data      []byte
-//	}{
-//		{
-//			publicKey: publicKey,
-//			timestamp: "2018-05-01T07:59:59",
-//			data:      []byte("first"),
-//		},
-//		{
-//			publicKey: publicKey,
-//			timestamp: "2018-05-01T08:00:00Z",
-//			data:      []byte("second"),
-//		},
-//		{
-//			publicKey: publicKey,
-//			timestamp: "2018-05-01T08:02:00Z",
-//			data:      []byte("fourth"),
-//		},
-//		{
-//			publicKey: publicKey,
-//			timestamp: "2018-05-01T08:01:00Z",
-//			data:      []byte("third"),
-//		},
-//		{
-//			publicKey: publicKey,
-//			timestamp: "2018-05-01T08:02:00Z",
-//			data:      []byte("fourth"),
-//		},
-//		{
-//			publicKey: publicKey,
-//			timestamp: "2018-05-01T08:04:00Z",
-//			data:      []byte("fifth"),
-//		},
-//	}
-//
-//	// load fixtures into db
-//	for _, f := range fixtures {
-//		ts, _ := time.Parse(time.RFC3339, f.timestamp)
-//
-//		s.db.DB.MustExec("INSERT INTO events (public_key, recorded_at, data) VALUES ($1, $2, $3)", f.publicKey, ts, f.data)
-//	}
-//}
+func (s *PostgresSuite) TestPing() {
+	err := s.db.Ping()
+	assert.Nil(s.T(), err)
+}
 
 func TestPostgresSuite(t *testing.T) {
 	suite.Run(t, new(PostgresSuite))
