@@ -11,12 +11,13 @@ import (
 	kitlog "github.com/go-kit/kit/log"
 	twrpprom "github.com/joneskoo/twirp-serverhook-prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	datastore "github.com/thingful/twirp-datastore-go"
 	goji "goji.io"
 	pat "goji.io/pat"
 
 	"github.com/thingful/iotstore/pkg/middleware"
+	"github.com/thingful/iotstore/pkg/postgres"
 	"github.com/thingful/iotstore/pkg/rpc"
-	datastore "github.com/thingful/twirp-datastore-go"
 )
 
 // Config is a struct used to pass in configuration from the calling task
@@ -37,11 +38,19 @@ type Server struct {
 	config *Config
 }
 
-// PulseHandler is the simplest possible handler function - used to expose an
-// endpoint which a load balancer can ping to verify that a node is running and
-// accepting connections.
-func PulseHandler(rw http.ResponseWriter, req *http.Request) {
-	fmt.Fprintf(rw, "ok")
+// PulseHandler is a function that closes over our DB instance returning an
+// http.Handler that attempts to connect to the DB, returning either 200 OKk
+// with an ok response if successful, or an error message with a 500 status if
+// the DB connection failed.
+func PulseHandler(db *postgres.DB) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		err := db.Ping()
+		if err != nil {
+			http.Error(w, "failed to connect to DB", http.StatusInternalServerError)
+			return
+		}
+		fmt.Fprintf(w, "ok")
+	})
 }
 
 // NewServer returns a new simple HTTP server.
@@ -55,7 +64,7 @@ func NewServer(config *Config, logger kitlog.Logger) *Server {
 
 	// set up the handlers
 	mux.Handle(pat.Post(datastore.DatastorePathPrefix+"*"), twirpHandler)
-	mux.HandleFunc(pat.Get("/pulse"), PulseHandler)
+	mux.Handle(pat.Get("/pulse"), PulseHandler(ds.DB))
 	mux.Handle(pat.Get("/metrics"), promhttp.Handler())
 
 	// add our middleware
