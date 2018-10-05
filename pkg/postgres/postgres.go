@@ -207,6 +207,19 @@ func (d *DB) DeleteData(before time.Time, execute bool) error {
 	return tx.Commit()
 }
 
+// Ping attempts to verify a connection to the database is still alive,
+// establishing a connection if necessary by executing a simple select query
+// agianst the DB. Note using DB.Ping() did not work as expected as if there are
+// existing connections in the pool that aren't used it will return no error
+// without actually going to the DB to check.
+func (d *DB) Ping() error {
+	_, err := d.DB.Exec("SELECT 1")
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // decodeCursor takes as input an encoded cursor string. Note we could have used
 // protobuffers here too, but for now this is just a simple struct encoded to
 // JSON and base64 encoded.
