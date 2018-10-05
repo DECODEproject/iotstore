@@ -1,7 +1,11 @@
 package tasks
 
 import (
+	"context"
+	"time"
+
 	"github.com/getsentry/raven-go"
+	"github.com/lestrrat-go/backoff"
 	"github.com/spf13/cobra"
 
 	"github.com/thingful/iotstore/pkg/logger"
@@ -59,17 +63,25 @@ clients unable to use the Protocol Buffer API.`,
 
 		logger := logger.NewLogger()
 
-		s := server.NewServer(
-			&server.Config{
-				Addr:     addr,
-				ConnStr:  datasource,
-				Verbose:  verbose,
-				CertFile: certFile,
-				KeyFile:  keyFile,
-			},
-			logger,
-		)
+		e := backoff.ExecuteFunc(func(_ context.Context) error {
+			s := server.NewServer(
+				&server.Config{
+					Addr:     addr,
+					ConnStr:  datasource,
+					Verbose:  verbose,
+					CertFile: certFile,
+					KeyFile:  keyFile,
+				},
+				logger,
+			)
 
-		return s.Start()
+			return s.Start()
+		})
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+		defer cancel()
+
+		policy := backoff.NewExponential()
+		return backoff.Retry(ctx, policy, e)
 	},
 }
