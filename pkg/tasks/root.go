@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/thingful/iotstore/pkg/version"
+	"github.com/DECODEproject/iotstore/pkg/version"
 )
 
 var rootCmd = &cobra.Command{

@@ -4,7 +4,7 @@
 BIN := iotstore
 
 # The projects root import path (under GOPATH)
-PKG := github.com/thingful/iotstore
+PKG := github.com/DECODEproject/iotstore
 
 # Docker Hub ID to which docker images should be pushed
 REGISTRY ?= thingful

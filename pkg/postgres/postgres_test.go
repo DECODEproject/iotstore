@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/thingful/iotstore/pkg/postgres"
+	"github.com/DECODEproject/iotstore/pkg/postgres"
 )
 
 type PostgresSuite struct {

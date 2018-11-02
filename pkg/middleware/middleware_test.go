@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/thingful/iotstore/pkg/middleware"
+	"github.com/DECODEproject/iotstore/pkg/middleware"
 )
 
 func testHandler() http.HandlerFunc {

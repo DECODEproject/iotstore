@@ -8,9 +8,9 @@ import (
 	"github.com/lestrrat-go/backoff"
 	"github.com/spf13/cobra"
 
-	"github.com/thingful/iotstore/pkg/logger"
-	"github.com/thingful/iotstore/pkg/server"
-	"github.com/thingful/iotstore/pkg/version"
+	"github.com/DECODEproject/iotstore/pkg/logger"
+	"github.com/DECODEproject/iotstore/pkg/server"
+	"github.com/DECODEproject/iotstore/pkg/version"
 )
 
 func init() {

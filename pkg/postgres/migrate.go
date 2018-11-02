@@ -15,7 +15,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/serenize/snaker"
 
-	"github.com/thingful/iotstore/pkg/migrations"
+	"github.com/DECODEproject/iotstore/pkg/migrations"
 )
 
 // MigrateUp attempts to run all up migrations against Postgres. Migrations are

@@ -11,8 +11,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/thingful/iotstore/pkg/postgres"
-	"github.com/thingful/iotstore/pkg/rpc"
+	"github.com/DECODEproject/iotstore/pkg/postgres"
+	"github.com/DECODEproject/iotstore/pkg/rpc"
 	datastore "github.com/thingful/twirp-datastore-go"
 )
 

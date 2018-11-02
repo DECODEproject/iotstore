@@ -6,8 +6,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	"github.com/thingful/iotstore/pkg/logger"
-	"github.com/thingful/iotstore/pkg/postgres"
+	"github.com/DECODEproject/iotstore/pkg/logger"
+	"github.com/DECODEproject/iotstore/pkg/postgres"
 )
 
 func init() {

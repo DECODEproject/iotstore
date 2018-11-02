@@ -12,7 +12,7 @@ import (
 	datastore "github.com/thingful/twirp-datastore-go"
 	"github.com/twitchtv/twirp"
 
-	"github.com/thingful/iotstore/pkg/postgres"
+	"github.com/DECODEproject/iotstore/pkg/postgres"
 )
 
 const (

@@ -5,9 +5,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/thingful/iotstore/pkg/logger"
-	"github.com/thingful/iotstore/pkg/postgres"
-	"github.com/thingful/iotstore/pkg/version"
+	"github.com/DECODEproject/iotstore/pkg/logger"
+	"github.com/DECODEproject/iotstore/pkg/postgres"
+	"github.com/DECODEproject/iotstore/pkg/version"
 )
 
 func init() {

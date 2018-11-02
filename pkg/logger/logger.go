@@ -4,7 +4,7 @@ import (
 	"os"
 
 	kitlog "github.com/go-kit/kit/log"
-	"github.com/thingful/iotstore/pkg/version"
+	"github.com/DECODEproject/iotstore/pkg/version"
 )
 
 // NewLogger is a simple helper function that returns a kitlog.Logger instance

@@ -9,8 +9,8 @@ import (
 	kitlog "github.com/go-kit/kit/log"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/thingful/iotstore/pkg/postgres"
-	"github.com/thingful/iotstore/pkg/server"
+	"github.com/DECODEproject/iotstore/pkg/postgres"
+	"github.com/DECODEproject/iotstore/pkg/server"
 )
 
 func TestPulseHandler(t *testing.T) {

@@ -15,9 +15,9 @@ import (
 	goji "goji.io"
 	pat "goji.io/pat"
 
-	"github.com/thingful/iotstore/pkg/middleware"
-	"github.com/thingful/iotstore/pkg/postgres"
-	"github.com/thingful/iotstore/pkg/rpc"
+	"github.com/DECODEproject/iotstore/pkg/middleware"
+	"github.com/DECODEproject/iotstore/pkg/postgres"
+	"github.com/DECODEproject/iotstore/pkg/rpc"
 )
 
 // Config is a struct used to pass in configuration from the calling task

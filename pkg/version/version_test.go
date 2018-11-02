@@ -3,7 +3,7 @@ package version_test
 import (
 	"testing"
 
-	"github.com/thingful/iotstore/pkg/version"
+	"github.com/DECODEproject/iotstore/pkg/version"
 )
 
 func TestVersionString(t *testing.T) {

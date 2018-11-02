@@ -85,7 +85,7 @@ func _20180519220506_add_events_tableDownSql() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "20180519220506_add_events_table.down.sql", size: 142, mode: os.FileMode(420), modTime: time.Unix(1538062371, 0)}
+	info := bindataFileInfo{name: "20180519220506_add_events_table.down.sql", size: 142, mode: os.FileMode(420), modTime: time.Unix(1541167761, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0x98, 0x58, 0x29, 0x23, 0xf6, 0x14, 0xa8, 0x5, 0x65, 0xb8, 0x2c, 0xae, 0x74, 0x15, 0x8b, 0x36, 0x94, 0x51, 0x44, 0x8d, 0x83, 0x66, 0x9d, 0x58, 0x68, 0x3c, 0x75, 0xc5, 0xb9, 0x5e, 0xa4, 0x5e}}
 	return a, nil
 }
@@ -105,7 +105,7 @@ func _20180519220506_add_events_tableUpSql() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "20180519220506_add_events_table.up.sql", size: 312, mode: os.FileMode(420), modTime: time.Unix(1538062371, 0)}
+	info := bindataFileInfo{name: "20180519220506_add_events_table.up.sql", size: 312, mode: os.FileMode(420), modTime: time.Unix(1541167761, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0x94, 0x5, 0xb6, 0x0, 0x5, 0x4, 0xd3, 0xb, 0x2f, 0xda, 0xc9, 0xab, 0xfb, 0x32, 0x8f, 0xc2, 0x3, 0x46, 0x60, 0xa3, 0xf2, 0x8f, 0x31, 0x3, 0xd2, 0x2f, 0xbc, 0xbe, 0xd2, 0x17, 0x7, 0x66}}
 	return a, nil
 }

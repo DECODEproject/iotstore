@@ -91,7 +91,7 @@ Reasoning:
 A single repository has been created that will hold all protocol buffer
 service definitions for the services being developed for DECODE. The location
 of that repository at time of writing is:
-https://github.com/thingful/decode-protorepo
+https://github.com/DECODEproject/decode-protorepo
 
 The language bindings for clients generated from this repo will be pushed
 into their own repositories via an automated script. These language bindings
@@ -102,7 +102,7 @@ will be packaged into the expected format for the language and deployed to
 the standard package index).
 
 Given this project uses Go, the Go bindings for the datastore are available
-here: https://github.com/thingful/twirp-datastore-go
+here: https://github.com/DECODEproject/twirp-datastore-go
 
 ## Status
 
