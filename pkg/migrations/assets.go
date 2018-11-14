@@ -127,7 +127,7 @@ func _20181114165638_add_device_tokenDownSql() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "20181114165638_add_device_token.down.sql", size: 46, mode: os.FileMode(420), modTime: time.Unix(1542214746, 0)}
+	info := bindataFileInfo{name: "20181114165638_add_device_token.down.sql", size: 46, mode: os.FileMode(420), modTime: time.Unix(1542232918, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0xce, 0xe6, 0x7, 0x51, 0xba, 0x3a, 0x20, 0xf0, 0xb8, 0xfc, 0x8b, 0xf0, 0x88, 0x55, 0x65, 0x32, 0xe, 0x62, 0x2e, 0x6e, 0xb5, 0x4a, 0xb5, 0xbc, 0xd3, 0x6d, 0xa, 0x99, 0xcf, 0x4, 0x3d, 0xe0}}
 	return a, nil
 }
@@ -147,7 +147,7 @@ func _20181114165638_add_device_tokenUpSql() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "20181114165638_add_device_token.up.sql", size: 139, mode: os.FileMode(420), modTime: time.Unix(1542214690, 0)}
+	info := bindataFileInfo{name: "20181114165638_add_device_token.up.sql", size: 139, mode: os.FileMode(420), modTime: time.Unix(1542232918, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0x5f, 0x4f, 0x76, 0x9, 0xae, 0xfe, 0xd1, 0xe0, 0x22, 0x5f, 0x80, 0x22, 0x9a, 0xd, 0x54, 0xe8, 0xe0, 0x6a, 0x72, 0x43, 0x4a, 0xd7, 0x25, 0xe1, 0x70, 0xc0, 0x99, 0x60, 0x67, 0xa6, 0x5a, 0xed}}
 	return a, nil
 }
