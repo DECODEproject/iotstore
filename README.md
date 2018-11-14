@@ -1,3 +1,5 @@
+[![CircleCI](https://circleci.com/gh/DECODEproject/iotstore.svg?style=svg)](https://circleci.com/gh/DECODEproject/iotstore)
+
 # iotstore
 
 Implementaton of proposed datastore interface for the DECODE IoTPilot/Scale
