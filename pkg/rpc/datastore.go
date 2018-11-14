@@ -76,6 +76,10 @@ func (d *Datastore) WriteData(ctx context.Context, req *datastore.WriteRequest) 
 		return nil, twirp.RequiredArgumentError("public_key")
 	}
 
+	if req.DeviceToken == "" {
+		return nil, twirp.RequiredArgumentError("device_token")
+	}
+
 	if d.verbose {
 		d.logger.Log(
 			"publicKey", req.PublicKey,
@@ -84,7 +88,7 @@ func (d *Datastore) WriteData(ctx context.Context, req *datastore.WriteRequest) 
 		)
 	}
 
-	err := d.DB.WriteData(req.PublicKey, req.Data)
+	err := d.DB.WriteData(req.PublicKey, req.Data, req.DeviceToken)
 	if err != nil {
 		return nil, twirp.InternalErrorWith(err)
 	}

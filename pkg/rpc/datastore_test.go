@@ -54,12 +54,15 @@ func (s *DatastoreSuite) TearDownTest() {
 
 func (s *DatastoreSuite) TestRoundTrip() {
 	publicKey := "abc123"
+	deviceToken := "device-token"
+
 	startTime, err := ptypes.TimestampProto(time.Now().Add(time.Hour * -1))
 	assert.Nil(s.T(), err)
 
 	_, err = s.ds.WriteData(context.Background(), &datastore.WriteRequest{
-		PublicKey: publicKey,
-		Data:      []byte("hello world"),
+		PublicKey:   publicKey,
+		Data:        []byte("hello world"),
+		DeviceToken: deviceToken,
 	})
 	assert.Nil(s.T(), err)
 
@@ -86,8 +89,13 @@ func (s *DatastoreSuite) TestWriteDataInvalid() {
 	}{
 		{
 			label:         "missing public_key",
-			request:       &datastore.WriteRequest{},
+			request:       &datastore.WriteRequest{DeviceToken: "device-token"},
 			expectedError: "twirp error invalid_argument: public_key is required",
+		},
+		{
+			label:         "missing device_token",
+			request:       &datastore.WriteRequest{PublicKey: "abc123"},
+			expectedError: "twirp error invalid_argument: device_token is required",
 		},
 	}
 
@@ -160,6 +168,8 @@ func (s *DatastoreSuite) TestPagination() {
 	startTimestamp, _ := ptypes.TimestampProto(startTime)
 	endTimestamp, _ := ptypes.TimestampProto(endTime)
 
+	deviceToken := "device-token"
+
 	fixtures := []struct {
 		publicKey string
 		timestamp string
@@ -201,7 +211,7 @@ func (s *DatastoreSuite) TestPagination() {
 	for _, f := range fixtures {
 		ts, _ := time.Parse(time.RFC3339, f.timestamp)
 
-		s.ds.DB.DB.MustExec("INSERT INTO events (public_key, recorded_at, data) VALUES ($1, $2, $3)", f.publicKey, ts, f.data)
+		s.ds.DB.DB.MustExec("INSERT INTO events (public_key, recorded_at, data, device_token) VALUES ($1, $2, $3, $4)", f.publicKey, ts, f.data, deviceToken)
 	}
 
 	resp, err := s.ds.ReadData(context.Background(), &datastore.ReadRequest{
