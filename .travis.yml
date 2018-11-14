@@ -7,6 +7,10 @@ go:
   - "1.10"
   - "1.11.x"
 
+before_script:
+  - psql -c 'create database iotstore_test;' -U postgres
+  - export IOTSTORE_DATABASE_URL=postgres://postgres:@localhost/iotstore_test?sslmode=disable
+
 script:
   - go test -i -installsuffix "static" ./cmd/... ./pkg/...
   - go test -v -installsuffix "static" -timeout 30s -p 1 ./pkg/...
