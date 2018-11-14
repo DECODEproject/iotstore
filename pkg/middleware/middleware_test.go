@@ -6,8 +6,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/DECODEproject/iotstore/pkg/middleware"
+	"github.com/stretchr/testify/assert"
 )
 
 func testHandler() http.HandlerFunc {
