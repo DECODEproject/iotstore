@@ -1,0 +1,12 @@
+language: go
+
+services:
+  - postgresql
+
+go:
+  - "1.10"
+  - "1.11.x"
+
+script:
+  - go test -i -installsuffix "static" ./cmd/... ./pkg/...
+  - go test -v -installsuffix "static" -timeout 30s -p 1 ./pkg/...
