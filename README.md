@@ -3,9 +3,6 @@
 Implementaton of proposed datastore interface for the DECODE IoTPilot/Scale
 Model.
 
-Uses an experimental template structure from here:
-https://github.com/thingful/go-build-template
-
 ## Building
 
 Run `make` or `make build` to build our binary compiled for `linux/amd64`

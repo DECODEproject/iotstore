@@ -86,15 +86,17 @@ func (d *DB) Stop() error {
 
 // WriteData is the function that is responsible for writing data to the actual
 // database. Takes as input a public key representing the policy we are storing
-// data for and a byte slice containing the encrypted data to be persisted.
-func (d *DB) WriteData(publicKey string, data []byte) error {
+// data for and a byte slice containing the encrypted data to be persisted. In
+// addition we also pass in the unique device token which we persist.
+func (d *DB) WriteData(publicKey string, data []byte, deviceToken string) error {
 	sql := `INSERT INTO events
-					(public_key, data)
-		VALUES (:public_key, :data)`
+		(public_key, data, device_token)
+		VALUES (:public_key, :data, :device_token)`
 
 	mapArgs := map[string]interface{}{
-		"public_key": publicKey,
-		"data":       data,
+		"public_key":   publicKey,
+		"data":         data,
+		"device_token": deviceToken,
 	}
 
 	sql, args, err := d.DB.BindNamed(sql, mapArgs)

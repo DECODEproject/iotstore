@@ -48,8 +48,9 @@ func (s *PostgresSuite) TearDownTest() {
 func (s *PostgresSuite) TestRoundTrip() {
 	startTime := time.Now().Add(time.Hour * -1)
 	publicKey := "abc123"
+	deviceToken := "device-token"
 
-	err := s.db.WriteData(publicKey, []byte("encrypted bytes"))
+	err := s.db.WriteData(publicKey, []byte("encrypted bytes"), deviceToken)
 	assert.Nil(s.T(), err)
 
 	events, err := s.db.ReadData(publicKey, 50, startTime, time.Time{}, "")
@@ -78,8 +79,9 @@ func (s *PostgresSuite) TestReadWithEndTime() {
 	startTime := time.Now().Add(time.Hour * -1)
 	endTime := time.Now().Add(time.Minute * -30)
 	publicKey := "abc123"
+	deviceToken := "device-token"
 
-	err := s.db.WriteData(publicKey, []byte("encrypted bytes"))
+	err := s.db.WriteData(publicKey, []byte("encrypted bytes"), deviceToken)
 	assert.Nil(s.T(), err)
 
 	events, err := s.db.ReadData(publicKey, 50, startTime, endTime, "")
