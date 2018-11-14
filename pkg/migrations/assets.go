@@ -2,6 +2,8 @@
 // sources:
 // sql/20180519220506_add_events_table.down.sql (142B)
 // sql/20180519220506_add_events_table.up.sql (312B)
+// sql/20181114165638_add_device_token.down.sql (46B)
+// sql/20181114165638_add_device_token.up.sql (139B)
 
 package migrations
 
@@ -110,6 +112,46 @@ func _20180519220506_add_events_tableUpSql() (*asset, error) {
 	return a, nil
 }
 
+var __20181114165638_add_device_tokenDownSql = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x72\xf4\x09\x71\x0d\x52\x08\x71\x74\xf2\x71\x55\x48\x2d\x4b\xcd\x2b\x29\xe6\x52\x50\x70\x09\xf2\x0f\x50\x70\xf6\xf7\x09\xf5\xf5\x53\x48\x49\x2d\xcb\x4c\x4e\x8d\x2f\xc9\xcf\x4e\xcd\xb3\x06\x04\x00\x00\xff\xff\x55\x1b\x61\x28\x2e\x00\x00\x00")
+
+func _20181114165638_add_device_tokenDownSqlBytes() ([]byte, error) {
+	return bindataRead(
+		__20181114165638_add_device_tokenDownSql,
+		"20181114165638_add_device_token.down.sql",
+	)
+}
+
+func _20181114165638_add_device_tokenDownSql() (*asset, error) {
+	bytes, err := _20181114165638_add_device_tokenDownSqlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "20181114165638_add_device_token.down.sql", size: 46, mode: os.FileMode(420), modTime: time.Unix(1542214746, 0)}
+	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0xce, 0xe6, 0x7, 0x51, 0xba, 0x3a, 0x20, 0xf0, 0xb8, 0xfc, 0x8b, 0xf0, 0x88, 0x55, 0x65, 0x32, 0xe, 0x62, 0x2e, 0x6e, 0xb5, 0x4a, 0xb5, 0xbc, 0xd3, 0x6d, 0xa, 0x99, 0xcf, 0x4, 0x3d, 0xe0}}
+	return a, nil
+}
+
+var __20181114165638_add_device_tokenUpSql = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x4c\xcc\xb1\x0a\xc2\x40\x0c\x87\xf1\x3d\x4f\xf1\x1f\xf5\x19\x3a\xc5\x5e\x84\x83\x98\x83\x36\x85\xdb\x6e\xb0\x19\x8a\x50\x07\x4b\xf1\xf1\x05\xe9\xd0\xf9\xc7\xf7\xb1\xba\x0c\x70\xbe\xa9\x20\xf6\x58\xb7\x0f\x01\x9c\x12\xfa\xa2\xd3\xc3\x30\xc7\xbe\x3c\xa3\x6d\xef\x57\xac\x70\xa9\x0e\x2b\x0e\x9b\x54\x3b\xa2\x7e\x10\x76\x41\xb6\x24\x15\xf9\xfe\x27\xa9\x79\xf4\xf1\x78\xb5\x73\xde\x96\xf9\x4b\x40\xb1\x03\x71\x39\xeb\xb5\xfb\x05\x00\x00\xff\xff\x1f\xa7\x88\x38\x8b\x00\x00\x00")
+
+func _20181114165638_add_device_tokenUpSqlBytes() ([]byte, error) {
+	return bindataRead(
+		__20181114165638_add_device_tokenUpSql,
+		"20181114165638_add_device_token.up.sql",
+	)
+}
+
+func _20181114165638_add_device_tokenUpSql() (*asset, error) {
+	bytes, err := _20181114165638_add_device_tokenUpSqlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "20181114165638_add_device_token.up.sql", size: 139, mode: os.FileMode(420), modTime: time.Unix(1542214690, 0)}
+	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0x5f, 0x4f, 0x76, 0x9, 0xae, 0xfe, 0xd1, 0xe0, 0x22, 0x5f, 0x80, 0x22, 0x9a, 0xd, 0x54, 0xe8, 0xe0, 0x6a, 0x72, 0x43, 0x4a, 0xd7, 0x25, 0xe1, 0x70, 0xc0, 0x99, 0x60, 0x67, 0xa6, 0x5a, 0xed}}
+	return a, nil
+}
+
 // Asset loads and returns the asset for the given name.
 // It returns an error if the asset could not be found or
 // could not be loaded.
@@ -204,6 +246,10 @@ var _bindata = map[string]func() (*asset, error){
 	"20180519220506_add_events_table.down.sql": _20180519220506_add_events_tableDownSql,
 
 	"20180519220506_add_events_table.up.sql": _20180519220506_add_events_tableUpSql,
+
+	"20181114165638_add_device_token.down.sql": _20181114165638_add_device_tokenDownSql,
+
+	"20181114165638_add_device_token.up.sql": _20181114165638_add_device_tokenUpSql,
 }
 
 // AssetDir returns the file names below a certain
@@ -249,6 +295,8 @@ type bintree struct {
 var _bintree = &bintree{nil, map[string]*bintree{
 	"20180519220506_add_events_table.down.sql": &bintree{_20180519220506_add_events_tableDownSql, map[string]*bintree{}},
 	"20180519220506_add_events_table.up.sql":   &bintree{_20180519220506_add_events_tableUpSql, map[string]*bintree{}},
+	"20181114165638_add_device_token.down.sql": &bintree{_20181114165638_add_device_tokenDownSql, map[string]*bintree{}},
+	"20181114165638_add_device_token.up.sql":   &bintree{_20181114165638_add_device_tokenUpSql, map[string]*bintree{}},
 }}
 
 // RestoreAsset restores an asset under the given directory.
