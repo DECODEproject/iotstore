@@ -1,4 +1,4 @@
-box: golang:1.10-alpine
+box: golang:1.11-alpine
 
 services:
   - id: postgres
