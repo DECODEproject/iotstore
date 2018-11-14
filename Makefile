@@ -28,15 +28,15 @@ ALL_ARCH := amd64 arm arm64
 
 ifeq ($(ARCH),amd64)
 	BASE_IMAGE?=alpine
-	BUILD_IMAGE?=golang:1.10-alpine
+	BUILD_IMAGE?=golang:1.11-alpine
 endif
 ifeq ($(ARCH),arm)
 	BASE_IMAGE?=arm32v7/busybox
-	BUILD_IMAGE?=arm32v7/golang:1.10-stretch
+	BUILD_IMAGE?=arm32v7/golang:1.11-stretch
 endif
 ifeq ($(ARCH),arm64)
 	BASE_IMAGE?=arm64v8/busybox
-	BUILD_IMAGE?=arm64v8/golang:1.10-alpine
+	BUILD_IMAGE?=arm64v8/golang:1.11-alpine
 endif
 
 IMAGE := $(REGISTRY)/$(BIN)-$(ARCH)
