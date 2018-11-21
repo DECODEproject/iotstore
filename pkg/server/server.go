@@ -69,6 +69,7 @@ func NewServer(config *Config, logger kitlog.Logger) *Server {
 
 	// add our middleware
 	mux.Use(middleware.RequestIDMiddleware)
+	mux.Use(middleware.MetricsMiddleware)
 
 	// create our http.Server instance
 	srv := &http.Server{
