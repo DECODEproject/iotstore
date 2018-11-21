@@ -10,6 +10,7 @@ import (
 
 	kitlog "github.com/go-kit/kit/log"
 	twrpprom "github.com/joneskoo/twirp-serverhook-prometheus"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	datastore "github.com/thingful/twirp-datastore-go"
 	goji "goji.io"
@@ -18,7 +19,24 @@ import (
 	"github.com/DECODEproject/iotstore/pkg/middleware"
 	"github.com/DECODEproject/iotstore/pkg/postgres"
 	"github.com/DECODEproject/iotstore/pkg/rpc"
+	"github.com/DECODEproject/iotstore/pkg/version"
 )
+
+var (
+	// buildInfo is a Gauge used to expose some system info to prometheus endpoint
+	buildInfo = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: "decode",
+			Subsystem: "datastore",
+			Name:      "build_info",
+			Help:      "Information about the current build of the service",
+		}, []string{"name", "version", "build_date"},
+	)
+)
+
+func init() {
+	prometheus.MustRegister(buildInfo)
+}
 
 // Config is a struct used to pass in configuration from the calling task
 type Config struct {
@@ -60,6 +78,9 @@ func NewServer(config *Config, logger kitlog.Logger) *Server {
 
 	twirpHandler := datastore.NewDatastoreServer(ds, hooks)
 
+	// set our dummy metric with the version info
+	buildInfo.WithLabelValues(version.BinaryName, version.Version, version.BuildDate).Set(1)
+
 	mux := goji.NewMux()
 
 	// set up the handlers
@@ -69,6 +90,7 @@ func NewServer(config *Config, logger kitlog.Logger) *Server {
 
 	// add our middleware
 	mux.Use(middleware.RequestIDMiddleware)
+	mux.Use(middleware.MetricsMiddleware)
 
 	// create our http.Server instance
 	srv := &http.Server{
