@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/DECODEproject/iotcommon/middleware"
 	kitlog "github.com/go-kit/kit/log"
 	twrpprom "github.com/joneskoo/twirp-serverhook-prometheus"
 	"github.com/prometheus/client_golang/prometheus"
@@ -16,7 +17,6 @@ import (
 	goji "goji.io"
 	pat "goji.io/pat"
 
-	"github.com/DECODEproject/iotstore/pkg/middleware"
 	"github.com/DECODEproject/iotstore/pkg/postgres"
 	"github.com/DECODEproject/iotstore/pkg/rpc"
 	"github.com/DECODEproject/iotstore/pkg/version"
@@ -90,7 +90,10 @@ func NewServer(config *Config, logger kitlog.Logger) *Server {
 
 	// add our middleware
 	mux.Use(middleware.RequestIDMiddleware)
-	mux.Use(middleware.MetricsMiddleware)
+
+	// add our metrics tracking middleware
+	metricsMiddleware := middleware.MetricsMiddleware("decode", "datastore")
+	mux.Use(metricsMiddleware)
 
 	// create our http.Server instance
 	srv := &http.Server{
