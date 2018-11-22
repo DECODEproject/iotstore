@@ -82,13 +82,13 @@
   version = "2.0.0"
 
 [[constraint]]
-  name = "github.com/google/uuid"
-  version = "1.0.0"
-
-[[constraint]]
   branch = "master"
   name = "github.com/getsentry/raven-go"
 
 [[constraint]]
   branch = "master"
   name = "github.com/lestrrat-go/backoff"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/DECODEproject/iotcommon"

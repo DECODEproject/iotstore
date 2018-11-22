@@ -3,6 +3,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:8ce86620a49897cbf2bf43627ef8efb2d9384226a525b841b6713bfd3a9dd480"
+  name = "github.com/DECODEproject/iotcommon"
+  packages = ["middleware"]
+  pruneopts = "UT"
+  revision = "b5900a0ea18abdefb4c35a0eb14064a55cc81733"
+
+[[projects]]
+  branch = "master"
   digest = "1:d6afaeed1502aa28e80a4ed0981d570ad91b2579193404256ce672ed0a609e0d"
   name = "github.com/beorn7/perks"
   packages = ["quantile"]
@@ -298,6 +306,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/DECODEproject/iotcommon/middleware",
     "github.com/elgris/sqrl",
     "github.com/getsentry/raven-go",
     "github.com/go-kit/kit/log",
@@ -305,12 +314,12 @@
     "github.com/golang-migrate/migrate/database/postgres",
     "github.com/golang-migrate/migrate/source/go-bindata",
     "github.com/golang/protobuf/ptypes",
-    "github.com/google/uuid",
     "github.com/jmoiron/sqlx",
     "github.com/joneskoo/twirp-serverhook-prometheus",
     "github.com/lestrrat-go/backoff",
     "github.com/lib/pq",
     "github.com/pkg/errors",
+    "github.com/prometheus/client_golang/prometheus",
     "github.com/prometheus/client_golang/prometheus/promhttp",
     "github.com/serenize/snaker",
     "github.com/spf13/cobra",
