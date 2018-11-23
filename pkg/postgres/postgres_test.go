@@ -47,13 +47,13 @@ func (s *PostgresSuite) TearDownTest() {
 
 func (s *PostgresSuite) TestRoundTrip() {
 	startTime := time.Now().Add(time.Hour * -1)
-	publicKey := "abc123"
+	policyId := "abc123"
 	deviceToken := "device-token"
 
-	err := s.db.WriteData(publicKey, []byte("encrypted bytes"), deviceToken)
+	err := s.db.WriteData(policyId, []byte("encrypted bytes"), deviceToken)
 	assert.Nil(s.T(), err)
 
-	events, err := s.db.ReadData(publicKey, 50, startTime, time.Time{}, "")
+	events, err := s.db.ReadData(policyId, 50, startTime, time.Time{}, "")
 	assert.Nil(s.T(), err)
 	assert.Len(s.T(), events, 1)
 
@@ -63,14 +63,14 @@ func (s *PostgresSuite) TestRoundTrip() {
 	err = s.db.DeleteData(time.Now(), false)
 	assert.Nil(s.T(), err)
 
-	events, err = s.db.ReadData(publicKey, 50, startTime, time.Time{}, "")
+	events, err = s.db.ReadData(policyId, 50, startTime, time.Time{}, "")
 	assert.Nil(s.T(), err)
 	assert.Len(s.T(), events, 1)
 
 	err = s.db.DeleteData(time.Now(), true)
 	assert.Nil(s.T(), err)
 
-	events, err = s.db.ReadData(publicKey, 50, startTime, time.Time{}, "")
+	events, err = s.db.ReadData(policyId, 50, startTime, time.Time{}, "")
 	assert.Nil(s.T(), err)
 	assert.Len(s.T(), events, 0)
 }
@@ -78,13 +78,13 @@ func (s *PostgresSuite) TestRoundTrip() {
 func (s *PostgresSuite) TestReadWithEndTime() {
 	startTime := time.Now().Add(time.Hour * -1)
 	endTime := time.Now().Add(time.Minute * -30)
-	publicKey := "abc123"
+	policyId := "abc123"
 	deviceToken := "device-token"
 
-	err := s.db.WriteData(publicKey, []byte("encrypted bytes"), deviceToken)
+	err := s.db.WriteData(policyId, []byte("encrypted bytes"), deviceToken)
 	assert.Nil(s.T(), err)
 
-	events, err := s.db.ReadData(publicKey, 50, startTime, endTime, "")
+	events, err := s.db.ReadData(policyId, 50, startTime, endTime, "")
 	assert.Nil(s.T(), err)
 	assert.Len(s.T(), events, 0)
 }

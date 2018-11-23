@@ -53,26 +53,26 @@ func (s *DatastoreSuite) TearDownTest() {
 }
 
 func (s *DatastoreSuite) TestRoundTrip() {
-	publicKey := "abc123"
+	policyID := "abc123"
 	deviceToken := "device-token"
 
 	startTime, err := ptypes.TimestampProto(time.Now().Add(time.Hour * -1))
 	assert.Nil(s.T(), err)
 
 	_, err = s.ds.WriteData(context.Background(), &datastore.WriteRequest{
-		PublicKey:   publicKey,
+		PolicyId:    policyID,
 		Data:        []byte("hello world"),
 		DeviceToken: deviceToken,
 	})
 	assert.Nil(s.T(), err)
 
 	resp, err := s.ds.ReadData(context.Background(), &datastore.ReadRequest{
-		PublicKey: publicKey,
+		PolicyId:  policyID,
 		StartTime: startTime,
 	})
 
 	assert.Nil(s.T(), err)
-	assert.Equal(s.T(), publicKey, resp.PublicKey)
+	assert.Equal(s.T(), policyID, resp.PolicyId)
 	assert.Len(s.T(), resp.Events, 1)
 	assert.Equal(s.T(), int(rpc.DefaultPageSize), int(resp.PageSize))
 	assert.Equal(s.T(), "", resp.NextPageCursor)
@@ -88,13 +88,13 @@ func (s *DatastoreSuite) TestWriteDataInvalid() {
 		expectedError string
 	}{
 		{
-			label:         "missing public_key",
+			label:         "missing policy_id",
 			request:       &datastore.WriteRequest{DeviceToken: "device-token"},
-			expectedError: "twirp error invalid_argument: public_key is required",
+			expectedError: "twirp error invalid_argument: policy_id is required",
 		},
 		{
 			label:         "missing device_token",
-			request:       &datastore.WriteRequest{PublicKey: "abc123"},
+			request:       &datastore.WriteRequest{PolicyId: "abc123"},
 			expectedError: "twirp error invalid_argument: device_token is required",
 		},
 	}
@@ -119,16 +119,16 @@ func (s *DatastoreSuite) TestReadDataInvalid() {
 		expectedError string
 	}{
 		{
-			label: "missing public_key",
+			label: "missing policy_id",
 			request: &datastore.ReadRequest{
 				StartTime: startTime,
 			},
-			expectedError: "twirp error invalid_argument: public_key is required",
+			expectedError: "twirp error invalid_argument: policy_id is required",
 		},
 		{
 			label: "large page size",
 			request: &datastore.ReadRequest{
-				PublicKey: "123abc",
+				PolicyId:  "123abc",
 				StartTime: startTime,
 				PageSize:  1001,
 			},
@@ -137,14 +137,14 @@ func (s *DatastoreSuite) TestReadDataInvalid() {
 		{
 			label: "missing start time",
 			request: &datastore.ReadRequest{
-				PublicKey: "123abc",
+				PolicyId: "123abc",
 			},
 			expectedError: "twirp error invalid_argument: start_time is required",
 		},
 		{
 			label: "end_time before start_time",
 			request: &datastore.ReadRequest{
-				PublicKey: "123abc",
+				PolicyId:  "123abc",
 				StartTime: startTime,
 				EndTime:   invalidEndTime,
 			},
@@ -171,37 +171,37 @@ func (s *DatastoreSuite) TestPagination() {
 	deviceToken := "device-token"
 
 	fixtures := []struct {
-		publicKey string
+		policyID  string
 		timestamp string
 		data      []byte
 	}{
 		{
-			publicKey: "abc123",
+			policyID:  "abc123",
 			timestamp: "2018-05-01T07:59:59",
 			data:      []byte("first"),
 		},
 		{
-			publicKey: "abc123",
+			policyID:  "abc123",
 			timestamp: "2018-05-01T08:00:00Z",
 			data:      []byte("first"),
 		},
 		{
-			publicKey: "abc123",
+			policyID:  "abc123",
 			timestamp: "2018-05-01T08:02:00Z",
 			data:      []byte("third"),
 		},
 		{
-			publicKey: "abc123",
+			policyID:  "abc123",
 			timestamp: "2018-05-01T08:01:00Z",
 			data:      []byte("second"),
 		},
 		{
-			publicKey: "abc123",
+			policyID:  "abc123",
 			timestamp: "2018-05-01T08:02:00Z",
 			data:      []byte("fourth"),
 		},
 		{
-			publicKey: "abc123",
+			policyID:  "abc123",
 			timestamp: "2018-05-01T08:04:00Z",
 			data:      []byte("fourth"),
 		},
@@ -211,18 +211,18 @@ func (s *DatastoreSuite) TestPagination() {
 	for _, f := range fixtures {
 		ts, _ := time.Parse(time.RFC3339, f.timestamp)
 
-		s.ds.DB.DB.MustExec("INSERT INTO events (public_key, recorded_at, data, device_token) VALUES ($1, $2, $3, $4)", f.publicKey, ts, f.data, deviceToken)
+		s.ds.DB.DB.MustExec("INSERT INTO events (policy_id, recorded_at, data, device_token) VALUES ($1, $2, $3, $4)", f.policyID, ts, f.data, deviceToken)
 	}
 
 	resp, err := s.ds.ReadData(context.Background(), &datastore.ReadRequest{
-		PublicKey: "abc123",
+		PolicyId:  "abc123",
 		PageSize:  3,
 		StartTime: startTimestamp,
 		EndTime:   endTimestamp,
 	})
 
 	assert.Nil(s.T(), err)
-	assert.Equal(s.T(), "abc123", resp.PublicKey)
+	assert.Equal(s.T(), "abc123", resp.PolicyId)
 	assert.Len(s.T(), resp.Events, 3)
 	assert.NotEqual(s.T(), "", resp.NextPageCursor)
 
@@ -231,7 +231,7 @@ func (s *DatastoreSuite) TestPagination() {
 	assert.Equal(s.T(), "third", string(resp.Events[2].Data))
 
 	resp, err = s.ds.ReadData(context.Background(), &datastore.ReadRequest{
-		PublicKey:  "abc123",
+		PolicyId:   "abc123",
 		PageSize:   3,
 		PageCursor: resp.NextPageCursor,
 		StartTime:  startTimestamp,
