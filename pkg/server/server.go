@@ -17,6 +17,7 @@ import (
 	goji "goji.io"
 	pat "goji.io/pat"
 
+	"github.com/DECODEproject/iotstore/pkg/metrics"
 	"github.com/DECODEproject/iotstore/pkg/postgres"
 	"github.com/DECODEproject/iotstore/pkg/rpc"
 	"github.com/DECODEproject/iotstore/pkg/version"
@@ -35,7 +36,7 @@ var (
 )
 
 func init() {
-	prometheus.MustRegister(buildInfo)
+	metrics.MustRegister(buildInfo)
 }
 
 // Config is a struct used to pass in configuration from the calling task
