@@ -13,11 +13,11 @@ import (
 	twrpprom "github.com/joneskoo/twirp-serverhook-prometheus"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	registry "github.com/thingful/retryable-registry-prometheus"
 	datastore "github.com/thingful/twirp-datastore-go"
 	goji "goji.io"
 	pat "goji.io/pat"
 
-	"github.com/DECODEproject/iotstore/pkg/metrics"
 	"github.com/DECODEproject/iotstore/pkg/postgres"
 	"github.com/DECODEproject/iotstore/pkg/rpc"
 	"github.com/DECODEproject/iotstore/pkg/version"
@@ -36,7 +36,7 @@ var (
 )
 
 func init() {
-	metrics.MustRegister(buildInfo)
+	registry.MustRegister(buildInfo)
 }
 
 // Config is a struct used to pass in configuration from the calling task
@@ -75,7 +75,7 @@ func PulseHandler(db *postgres.DB) http.Handler {
 // NewServer returns a new simple HTTP server.
 func NewServer(config *Config, logger kitlog.Logger) *Server {
 	ds := rpc.NewDatastore(config.ConnStr, config.Verbose, logger)
-	hooks := twrpprom.NewServerHooks(nil)
+	hooks := twrpprom.NewServerHooks(registry.DefaultRegisterer)
 
 	twirpHandler := datastore.NewDatastoreServer(ds, hooks)
 
