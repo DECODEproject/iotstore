@@ -92,7 +92,3 @@
 [[constraint]]
   branch = "master"
   name = "github.com/DECODEproject/iotcommon"
-
-[[constraint]]
-  branch = "master"
-  name = "github.com/thingful/retryable-registry-prometheus"
