@@ -32,8 +32,6 @@ var (
 			Help:      "Information about the current build of the service",
 		}, []string{"name", "version", "build_date"},
 	)
-
-	registry prometheus.Registerer
 )
 
 // Config is a struct used to pass in configuration from the calling task
@@ -71,7 +69,7 @@ func PulseHandler(db *postgres.DB) http.Handler {
 
 // NewServer returns a new simple HTTP server.
 func NewServer(config *Config, logger kitlog.Logger) *Server {
-	registry = prometheus.NewRegistry()
+	registry := prometheus.NewRegistry()
 	registry.MustRegister(buildInfo)
 
 	ds := rpc.NewDatastore(config.ConnStr, config.Verbose, logger)
