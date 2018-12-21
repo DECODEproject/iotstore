@@ -3,11 +3,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:8ce86620a49897cbf2bf43627ef8efb2d9384226a525b841b6713bfd3a9dd480"
+  digest = "1:827b3b255c275c1df7d32d661e69e21840d120c63dcd1c999ce231024894ece0"
   name = "github.com/DECODEproject/iotcommon"
   packages = ["middleware"]
   pruneopts = "UT"
-  revision = "b5900a0ea18abdefb4c35a0eb14064a55cc81733"
+  revision = "b1c06887102bb6a8b0ad4af40b7476ed07301067"
 
 [[projects]]
   branch = "master"
@@ -35,19 +35,19 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:2288fb955b562abd4f7840e2880e40ca04c2a7cd0f173bf8d42f814603d6e4d0"
+  digest = "1:97fc9e0cda8cdf339065aa818bc5ab90de24bdcf809a326cecda172cd37eef9c"
   name = "github.com/elgris/sqrl"
   packages = ["."]
   pruneopts = "UT"
-  revision = "251cbee0585024fa70563c2950b7969d9ef87300"
+  revision = "90ecf730640af15b296b0613b5d74848b3675e53"
 
 [[projects]]
   branch = "master"
-  digest = "1:e51147e761aa8b6769e05e586c7012eb221c8be72fbc68a4340a53b974e67b9f"
+  digest = "1:d18f6f088d7d8365df47f49dfa24b6ff6701a941118ffda30c589d1bd954074b"
   name = "github.com/getsentry/raven-go"
   packages = ["."]
   pruneopts = "UT"
-  revision = "3033899c76deb3fb6570d9c4074d00443aeab88f"
+  revision = "f04e7487e9a6b9d9837d52743fb5f40576c56411"
 
 [[projects]]
   digest = "1:0cfcded8689c2c964c223650009c5dd9e283c22d57f18f2335aafa16cc22acf1"
@@ -58,12 +58,12 @@
   version = "v0.7.0"
 
 [[projects]]
-  digest = "1:31a18dae27a29aa074515e43a443abfd2ba6deb6d69309d8d7ce789c45f34659"
+  digest = "1:4062bc6de62d73e2be342243cf138cf499b34d558876db8d9430e2149388a4d8"
   name = "github.com/go-logfmt/logfmt"
   packages = ["."]
   pruneopts = "UT"
-  revision = "390ab7935ee28ec6b286364bba9b4dd6410cb3d5"
-  version = "v0.3.0"
+  revision = "07c9b44f60d7ffdfb7d8efe1ad539965737836dc"
+  version = "v0.4.0"
 
 [[projects]]
   digest = "1:586ea76dbd0374d6fb649a91d70d652b7fe0ccffb8910a77468e7702e7901f3d"
@@ -104,12 +104,12 @@
   version = "v1.2.0"
 
 [[projects]]
-  digest = "1:3a26588bc48b96825977c1b3df964f8fd842cd6860cc26370588d3563433cf11"
+  digest = "1:236d7e1bdb50d8f68559af37dbcf9d142d56b431c9b2176d41e2a009b664cda8"
   name = "github.com/google/uuid"
   packages = ["."]
   pruneopts = "UT"
-  revision = "d460ce9f8df2e77fb1ba55ca87fafed96c607494"
-  version = "v1.0.0"
+  revision = "9b3b1e0f5f99ae461456d768e7d301a7acdaa2d8"
+  version = "v1.1.0"
 
 [[projects]]
   digest = "1:870d441fe217b8e689d7949fef6e43efbc787e50f200cb1e70dbca9204a1d6be"
@@ -210,7 +210,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:db712fde5d12d6cdbdf14b777f0c230f4ff5ab0be8e35b239fc319953ed577a4"
+  digest = "1:33c81bf709f084827a560e14415b1d7001a6d1d6fa4bec2cc2e60b84ecbc0e0a"
   name = "github.com/prometheus/common"
   packages = [
     "expfmt",
@@ -218,11 +218,11 @@
     "model",
   ]
   pruneopts = "UT"
-  revision = "41aa239b4cce3c56ab88fc366ae8b0a6423fa239"
+  revision = "67670fe90761d7ff18ec1d640135e53b9198328f"
 
 [[projects]]
   branch = "master"
-  digest = "1:ef74914912f99c79434d9c09658274678bc85080ebe3ab32bec3940ebce5e1fc"
+  digest = "1:d39e7c7677b161c2dd4c635a2ac196460608c7d8ba5337cc8cae5825a2681f8f"
   name = "github.com/prometheus/procfs"
   packages = [
     ".",
@@ -231,7 +231,7 @@
     "xfs",
   ]
   pruneopts = "UT"
-  revision = "185b4288413d2a0dd0806f78c90dde719829e5ae"
+  revision = "1dc9a6cbc91aacc3e8b2d63db4d2e957a5394ac4"
 
 [[projects]]
   branch = "master"
@@ -278,7 +278,7 @@
   version = "v0.1.0"
 
 [[projects]]
-  digest = "1:bc5f818bb50c42b55721ab0ea9af6c28cad7d9e31db43eaa78d2ca487c9897ac"
+  digest = "1:1cc64dd62b73781ccbd6b3dd4c893e97b4437e9d0710916d0c3129c3a66cfac7"
   name = "github.com/twitchtv/twirp"
   packages = [
     ".",
@@ -286,8 +286,8 @@
     "internal/contextkeys",
   ]
   pruneopts = "UT"
-  revision = "d08b9415baf292b016ed9c55c37e66154c46c221"
-  version = "v5.5.0"
+  revision = "89e10d8c51c4ee477a43a6f817f1958b90fecff9"
+  version = "v5.5.1"
 
 [[projects]]
   digest = "1:356ed667fc203854cc86c9d94a632e7d0c3a30ee0b6ebec484bf6a1b55eeed68"
