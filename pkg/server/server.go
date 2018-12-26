@@ -13,6 +13,7 @@ import (
 	twrpprom "github.com/joneskoo/twirp-serverhook-prometheus"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	registry "github.com/thingful/retryable-registry-prometheus"
 	datastore "github.com/thingful/twirp-datastore-go"
 	goji "goji.io"
 	pat "goji.io/pat"
@@ -33,6 +34,10 @@ var (
 		}, []string{"name", "version", "build_date"},
 	)
 )
+
+func init() {
+	registry.MustRegister(buildInfo)
+}
 
 // Config is a struct used to pass in configuration from the calling task
 type Config struct {
@@ -69,11 +74,8 @@ func PulseHandler(db *postgres.DB) http.Handler {
 
 // NewServer returns a new simple HTTP server.
 func NewServer(config *Config, logger kitlog.Logger) *Server {
-	registry := prometheus.NewRegistry()
-	registry.MustRegister(buildInfo)
-
 	ds := rpc.NewDatastore(config.ConnStr, config.Verbose, logger)
-	hooks := twrpprom.NewServerHooks(registry)
+	hooks := twrpprom.NewServerHooks(registry.DefaultRegisterer)
 
 	twirpHandler := datastore.NewDatastoreServer(ds, hooks)
 
@@ -91,7 +93,7 @@ func NewServer(config *Config, logger kitlog.Logger) *Server {
 	mux.Use(middleware.RequestIDMiddleware)
 
 	// add our metrics tracking middleware
-	metricsMiddleware := middleware.MetricsMiddleware("decode", "datastore", registry)
+	metricsMiddleware := middleware.MetricsMiddleware("decode", "datastore", registry.DefaultRegisterer)
 	mux.Use(metricsMiddleware)
 
 	// create our http.Server instance
