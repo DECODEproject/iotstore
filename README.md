@@ -79,3 +79,26 @@ The above compose file starts postgresql and the datastore containers running
 in verbose mode using the default postgres system database. We will need to a
 little more work to run with other services, but this will let you test out
 the basic operations of the datastore.
+
+## Configuration
+
+The binary generated for this application is called `iotstore`. It has the following four subcommands:
+
+* `delete` - can be used to delete old data from the database
+* `help` - displays help informmation
+* `migrate` - allows database migrations to be created and applied
+* `server` - the primary command that starts up the server.
+
+For operational use the `server` command is the only one that is generally
+required.
+
+**Configuration for `server` command**
+
+| Flag                 | Environment Variable  | Description                                      | Default value | Required |
+| -------------------- | --------------------- | ------------------------------------------------ | ------------- | -------- |
+| --addr or -a         | IOTSTORE_ADDR         | The address to which the server binds            | 0.0.0.0:8080  | No       |
+| --cert-file or -c    | IOTSTORE_CERT_FILE    | The path to a TLS certificate file to enable TLS |               | No       |
+| --key-file or -k     | IOTSTORE_KEY_FILE     | The path to a TLS key file to enable TLS         |               | No       |
+| --verbose            | IOTSTORE_VERBOSE      | Flag that if set enables verbose mode            | False         | No       |
+| --database-url or -d | IOTSTORE_DATABASE_URL | Connection string for Postgres database          |               | Yes      |
+|                      | SENTRY_DSN            | Optional DSN string for Sentry error reporting   |               | No       |
