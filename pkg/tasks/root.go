@@ -1,10 +1,12 @@
 package tasks
 
 import (
-	"fmt"
-	"os"
+	"log"
+	"strings"
 
+	"github.com/getsentry/raven-go"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/DECODEproject/iotstore/pkg/version"
 )
@@ -29,11 +31,18 @@ meaning this datastore has no visibility of the data being persisted.
 // Execute is the entrypoint to our root command, called from main.go
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		raven.CaptureErrorAndWait(err, nil)
+		log.Fatal(err)
 	}
 }
 
 func init() {
+	viper.SetEnvPrefix("IOTSTORE")
+	viper.AutomaticEnv()
+	replacer := strings.NewReplacer("-", "_")
+	viper.SetEnvKeyReplacer(replacer)
+
 	rootCmd.PersistentFlags().Bool("verbose", false, "Enable verbose output")
+
+	viper.BindPFlag("verbose", rootCmd.Flags().Lookup("verbose"))
 }
