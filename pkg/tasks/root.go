@@ -41,8 +41,4 @@ func init() {
 	viper.AutomaticEnv()
 	replacer := strings.NewReplacer("-", "_")
 	viper.SetEnvKeyReplacer(replacer)
-
-	rootCmd.PersistentFlags().Bool("verbose", false, "Enable verbose output")
-
-	viper.BindPFlag("verbose", rootCmd.Flags().Lookup("verbose"))
 }

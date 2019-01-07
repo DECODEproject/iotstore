@@ -22,11 +22,13 @@ func init() {
 	serverCmd.Flags().StringP("cert-file", "c", "", "The path to a TLS certificate file to enable TLS on the server")
 	serverCmd.Flags().StringP("key-file", "k", "", "The path to a TLS private key file to enable TLS on the server")
 	serverCmd.Flags().StringP("database-url", "d", "", "URL at which Postgres is listening (e.g. postgres://username:password@host:5432/dbname?sslmode=enable)")
+	serverCmd.Flags().Bool("verbose", false, "Enable verbose output")
 
 	viper.BindPFlag("addr", serverCmd.Flags().Lookup("addr"))
 	viper.BindPFlag("cert-file", serverCmd.Flags().Lookup("cert-file"))
 	viper.BindPFlag("key-file", serverCmd.Flags().Lookup("key-file"))
 	viper.BindPFlag("database-url", serverCmd.Flags().Lookup("database-url"))
+	viper.BindPFlag("verbose", serverCmd.Flags().Lookup("verbose"))
 
 	raven.SetRelease(version.Version)
 	raven.SetTagsContext(map[string]string{"component": "datastore"})
