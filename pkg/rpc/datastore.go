@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/getsentry/raven-go"
-
+	raven "github.com/getsentry/raven-go"
 	kitlog "github.com/go-kit/kit/log"
 	"github.com/golang/protobuf/ptypes"
+	"github.com/pkg/errors"
 	datastore "github.com/thingful/twirp-datastore-go"
 	"github.com/twitchtv/twirp"
 
@@ -94,7 +94,7 @@ func (d *Datastore) WriteData(ctx context.Context, req *datastore.WriteRequest) 
 	err := d.DB.WriteData(req.PolicyId, req.Data, req.DeviceToken)
 	if err != nil {
 		raven.CaptureError(err, map[string]string{"operation": "writeData"})
-		return nil, twirp.InternalErrorWith(err)
+		return nil, twirp.InternalErrorWith(errors.Cause(err))
 	}
 
 	return &datastore.WriteResponse{}, nil
@@ -134,7 +134,7 @@ func (d *Datastore) ReadData(ctx context.Context, req *datastore.ReadRequest) (*
 	rawEvents, err := d.DB.ReadData(req.PolicyId, uint64(req.PageSize), startTime, endTime, req.PageCursor)
 	if err != nil {
 		raven.CaptureError(err, map[string]string{"operation": "readData"})
-		return nil, twirp.InternalErrorWith(err)
+		return nil, twirp.InternalErrorWith(errors.Cause(err))
 	}
 
 	events := []*datastore.EncryptedEvent{}
@@ -146,7 +146,7 @@ func (d *Datastore) ReadData(ctx context.Context, req *datastore.ReadRequest) (*
 		event, err := buildEncryptedEvent(raw)
 		if err != nil {
 			raven.CaptureError(err, map[string]string{"operation": "readData"})
-			return nil, twirp.InternalErrorWith(err)
+			return nil, twirp.InternalErrorWith(errors.Cause(err))
 		}
 
 		events = append(events, event)
@@ -155,7 +155,7 @@ func (d *Datastore) ReadData(ctx context.Context, req *datastore.ReadRequest) (*
 	nextCursor, err := encodeCursor(events, req.PageSize, lastEventID)
 	if err != nil {
 		raven.CaptureError(err, map[string]string{"operation": "readData"})
-		return nil, twirp.InternalErrorWith(err)
+		return nil, twirp.InternalErrorWith(errors.Cause(err))
 	}
 
 	return &datastore.ReadResponse{
