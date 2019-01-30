@@ -7,7 +7,7 @@ BIN := iotstore
 PKG := github.com/DECODEproject/iotstore
 
 # Docker Hub ID to which docker images should be pushed
-REGISTRY ?= thingful
+REGISTRY ?= decodeproject
 
 # Default architecture to build
 ARCH ?= amd64
