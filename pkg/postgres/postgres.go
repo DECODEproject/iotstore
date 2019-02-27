@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"time"
@@ -30,6 +31,20 @@ type Event struct {
 type Cursor struct {
 	EventID   int64     `json:"eventID"`
 	Timestamp time.Time `json:"timestamp"`
+}
+
+// Page is a struct used to return a page of events. Includes a cursor which
+// points to the next page rather than have the twirp layer do this work.
+type Page struct {
+	Events         []*Event
+	NextPageCursor string
+}
+
+// Certificate is an internal type used for persisting and reading TLS
+// certificates from Postgres
+type Certificate struct {
+	Key         string `db:"key"`
+	Certificate []byte `db:"certificate"`
 }
 
 // DB is a struct that wraps an sqlx.DB instance that exposes some methods to
@@ -99,23 +114,30 @@ func (d *DB) WriteData(policyId string, data []byte, deviceToken string) error {
 		"device_token": deviceToken,
 	}
 
-	sql, args, err := d.DB.BindNamed(sql, mapArgs)
+	tx, err := d.DB.Beginx()
 	if err != nil {
+		return errors.Wrap(err, "failed to begin transaction")
+	}
+
+	sql, args, err := tx.BindNamed(sql, mapArgs)
+	if err != nil {
+		tx.Rollback()
 		raven.CaptureError(err, map[string]string{"operation": "writeData"})
 		return errors.Wrap(err, "failed to bind named query")
 	}
 
-	_, err = d.DB.Exec(sql, args...)
+	_, err = tx.Exec(sql, args...)
 	if err != nil {
+		tx.Rollback()
 		raven.CaptureError(err, map[string]string{"operation": "writeData"})
 		return errors.Wrap(err, "failed to execute write query")
 	}
 
-	return nil
+	return tx.Commit()
 }
 
 // ReadData returns a list of Event types for the given query parameters.
-func (d *DB) ReadData(policyId string, pageSize uint64, startTime, endTime time.Time, pageCursor string) ([]*Event, error) {
+func (d *DB) ReadData(policyId string, pageSize uint64, startTime, endTime time.Time, pageCursor string) (*Page, error) {
 	// use sqrl builder here as it simplifies the creation of the query.
 	builder := sq.Select("id", "recorded_at", "data").
 		From("events").
@@ -163,7 +185,21 @@ func (d *DB) ReadData(policyId string, pageSize uint64, startTime, endTime time.
 		events = append(events, &e)
 	}
 
-	return events, nil
+	var nextCursor string
+
+	if len(events) == int(pageSize) {
+		// we should construct a next page cursor value to return
+		nextCursor, err = encodeCursor(events[len(events)-1])
+		if err != nil {
+			raven.CaptureError(err, map[string]string{"operation": "readData"})
+			return nil, errors.Wrap(err, "failed to build next page cursor")
+		}
+	}
+
+	return &Page{
+		Events:         events,
+		NextPageCursor: nextCursor,
+	}, nil
 }
 
 // DeleteData takes as input a timestamp, and after it is executed will have
@@ -190,6 +226,7 @@ func (d *DB) DeleteData(before time.Time, execute bool) error {
 
 	tx, err := d.DB.Beginx()
 	if err != nil {
+		raven.CaptureError(err, map[string]string{"operation": "deleteData"})
 		return errors.Wrap(err, "failed to start transaction")
 	}
 
@@ -197,6 +234,7 @@ func (d *DB) DeleteData(before time.Time, execute bool) error {
 	err = tx.Get(&count, sql, before)
 	if err != nil {
 		tx.Rollback()
+		raven.CaptureError(err, map[string]string{"operation": "deleteData"})
 		return errors.Wrap(err, "failed to execute delete query")
 	}
 
@@ -220,6 +258,93 @@ func (d *DB) Ping() error {
 		return err
 	}
 	return nil
+}
+
+// Get is our implementation of the method defined in the autocert.Cache
+// interface for reading certificates from some underlying datastore.
+func (d *DB) Get(ctx context.Context, key string) ([]byte, error) {
+	sql := `SELECT certificate FROM certificates WHERE key = $1`
+
+	var certificate []byte
+	err := d.DB.Get(&certificate, sql, key)
+	if err != nil {
+		raven.CaptureError(err, map[string]string{"operation": "getCertificate"})
+		return nil, errors.Wrap(err, "failed to read certificate from DB")
+	}
+
+	return certificate, nil
+}
+
+// Put is our implementation of the method defined in the autocert.Cache
+// interface for writing certificates to some underlying datastore.
+func (d *DB) Put(ctx context.Context, key string, data []byte) error {
+	sql := `INSERT INTO certificates (key, certificate)
+		VALUES (:key, :certificate)
+	ON CONFLICT (key)
+	DO UPDATE SET certificate = EXCLUDED.certificate`
+
+	mapArgs := map[string]interface{}{
+		"key":         key,
+		"certificate": data,
+	}
+
+	tx, err := d.DB.Beginx()
+	if err != nil {
+		raven.CaptureError(err, map[string]string{"operation": "putCertificate"})
+		return errors.Wrap(err, "failed to begin transaction when writing certificate")
+	}
+
+	sql, args, err := tx.BindNamed(sql, mapArgs)
+	if err != nil {
+		tx.Rollback()
+		raven.CaptureError(err, map[string]string{"operation": "putCertificate"})
+		return errors.Wrap(err, "failed to bind named parameters")
+	}
+
+	_, err = tx.Exec(sql, args...)
+	if err != nil {
+		tx.Rollback()
+		raven.CaptureError(err, map[string]string{"operation": "putCertificate"})
+		return errors.Wrap(err, "failed to insert certificate")
+	}
+
+	return tx.Commit()
+}
+
+// Delete is our implementation of the autocert.Cache interface for deleting
+// certificates from some underlying datastore.
+func (d *DB) Delete(ctx context.Context, key string) error {
+	sql := `DELETE FROM certificates WHERE key = $1`
+
+	tx, err := d.DB.Beginx()
+	if err != nil {
+		raven.CaptureError(err, map[string]string{"operation": "deleteCertificate"})
+		return errors.Wrap(err, "failed to begin transaction when deleting certificate")
+	}
+
+	_, err = tx.Exec(sql, key)
+	if err != nil {
+		tx.Rollback()
+		raven.CaptureError(err, map[string]string{"operation": "deleteCertificate"})
+		return errors.Wrap(err, "failed to delete certificate")
+	}
+
+	return tx.Commit()
+}
+
+func encodeCursor(event *Event) (string, error) {
+	// create non-empty cursor meaning the requestor can look for more pages
+	c := &Cursor{
+		Timestamp: event.RecordedAt,
+		EventID:   event.ID,
+	}
+
+	b, err := json.Marshal(c)
+	if err != nil {
+		return "", err
+	}
+
+	return base64.StdEncoding.EncodeToString(b), nil
 }
 
 // decodeCursor takes as input an encoded cursor string. Note we could have used
