@@ -124,14 +124,6 @@ func (s *Server) Start() error {
 		return err
 	}
 
-	m := &autocert.Manager{
-		Cache:      s.db,
-		Prompt:     autocert.AcceptTOS,
-		HostPolicy: autocert.HostWhitelist(s.config.Domains...),
-	}
-
-	s.srv.TLSConfig = m.TLSConfig()
-
 	stopChan := make(chan os.Signal)
 	signal.Notify(stopChan, os.Interrupt)
 
@@ -144,6 +136,14 @@ func (s *Server) Start() error {
 		)
 
 		if isTLSEnabled(s.config) {
+			m := &autocert.Manager{
+				Cache:      s.db,
+				Prompt:     autocert.AcceptTOS,
+				HostPolicy: autocert.HostWhitelist(s.config.Domains...),
+			}
+
+			s.srv.TLSConfig = m.TLSConfig()
+
 			if err := s.srv.ListenAndServeTLS("", ""); err != nil {
 				s.logger.Log("err", err)
 				os.Exit(1)
