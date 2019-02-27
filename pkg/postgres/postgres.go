@@ -2,9 +2,12 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 	"encoding/base64"
 	"encoding/json"
 	"time"
+
+	"golang.org/x/crypto/acme/autocert"
 
 	sq "github.com/elgris/sqrl"
 	raven "github.com/getsentry/raven-go"
@@ -263,11 +266,14 @@ func (d *DB) Ping() error {
 // Get is our implementation of the method defined in the autocert.Cache
 // interface for reading certificates from some underlying datastore.
 func (d *DB) Get(ctx context.Context, key string) ([]byte, error) {
-	sql := `SELECT certificate FROM certificates WHERE key = $1`
+	query := `SELECT certificate FROM certificates WHERE key = $1`
 
 	var certificate []byte
-	err := d.DB.Get(&certificate, sql, key)
+	err := d.DB.Get(&certificate, query, key)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, autocert.ErrCacheMiss
+		}
 		raven.CaptureError(err, map[string]string{"operation": "getCertificate"})
 		return nil, errors.Wrap(err, "failed to read certificate from DB")
 	}

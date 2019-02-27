@@ -9,6 +9,7 @@ import (
 	kitlog "github.com/go-kit/kit/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+	"golang.org/x/crypto/acme/autocert"
 
 	"github.com/DECODEproject/iotstore/pkg/postgres"
 )
@@ -113,6 +114,7 @@ func (s *PostgresSuite) TestCertificates() {
 	// nonexistent key should return error
 	_, err := s.db.Get(ctx, "baz")
 	assert.NotNil(s.T(), err)
+	assert.Equal(s.T(), autocert.ErrCacheMiss, err)
 
 	// should be able to write a cert
 	err = s.db.Put(ctx, "foo", []byte("bar"))
@@ -130,6 +132,7 @@ func (s *PostgresSuite) TestCertificates() {
 	// now should not be able to read it
 	_, err = s.db.Get(ctx, "foo")
 	assert.NotNil(s.T(), err)
+	assert.Equal(s.T(), autocert.ErrCacheMiss, err)
 }
 
 func TestPostgresSuite(t *testing.T) {
