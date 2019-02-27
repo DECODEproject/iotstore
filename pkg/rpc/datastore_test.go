@@ -25,19 +25,20 @@ func (s *DatastoreSuite) SetupTest() {
 	logger := kitlog.NewNopLogger()
 	connStr := os.Getenv("IOTSTORE_DATABASE_URL")
 
-	db, err := postgres.Open(connStr)
+	d, err := postgres.Open(connStr)
 	if err != nil {
 		s.T().Fatalf("Failed to open db connection: %v", err)
 	}
 
-	postgres.MigrateDownAll(db.DB, logger)
+	postgres.MigrateDownAll(d.DB, logger)
 
-	err = db.Close()
+	err = d.Close()
 	if err != nil {
 		s.T().Fatalf("Failed to close DB: %v", err)
 	}
 
-	s.ds = rpc.NewDatastore(connStr, true, logger)
+	db := postgres.NewDB(connStr, true, logger)
+	s.ds = rpc.NewDatastore(db, true, logger)
 
 	err = s.ds.Start()
 	if err != nil {
