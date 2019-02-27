@@ -2,8 +2,6 @@ package rpc
 
 import (
 	"context"
-	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -41,9 +39,7 @@ var _ datastore.Datastore = &Datastore{}
 // NewDatastore returns a newly instantiated Datastore instance. It takes as
 // parameters a DB connection string and a logger. The connection string is
 // passed down to the postgres package where it is used to connect.
-func NewDatastore(connStr string, verbose bool, logger kitlog.Logger) *Datastore {
-	db := postgres.NewDB(connStr, verbose, logger)
-
+func NewDatastore(db *postgres.DB, verbose bool, logger kitlog.Logger) *Datastore {
 	logger = kitlog.With(logger, "module", "rpc")
 
 	ds := &Datastore{
@@ -131,19 +127,16 @@ func (d *Datastore) ReadData(ctx context.Context, req *datastore.ReadRequest) (*
 		)
 	}
 
-	rawEvents, err := d.DB.ReadData(req.PolicyId, uint64(req.PageSize), startTime, endTime, req.PageCursor)
+	page, err := d.DB.ReadData(req.PolicyId, uint64(req.PageSize), startTime, endTime, req.PageCursor)
 	if err != nil {
 		raven.CaptureError(err, map[string]string{"operation": "readData"})
 		return nil, twirp.InternalErrorWith(errors.Cause(err))
 	}
 
 	events := []*datastore.EncryptedEvent{}
-	var lastEventID int64
 
-	for _, raw := range rawEvents {
-		lastEventID = raw.ID
-
-		event, err := buildEncryptedEvent(raw)
+	for _, e := range page.Events {
+		event, err := buildEncryptedEvent(e)
 		if err != nil {
 			raven.CaptureError(err, map[string]string{"operation": "readData"})
 			return nil, twirp.InternalErrorWith(errors.Cause(err))
@@ -152,17 +145,11 @@ func (d *Datastore) ReadData(ctx context.Context, req *datastore.ReadRequest) (*
 		events = append(events, event)
 	}
 
-	nextCursor, err := encodeCursor(events, req.PageSize, lastEventID)
-	if err != nil {
-		raven.CaptureError(err, map[string]string{"operation": "readData"})
-		return nil, twirp.InternalErrorWith(errors.Cause(err))
-	}
-
 	return &datastore.ReadResponse{
 		PolicyId:       req.PolicyId,
 		Events:         events,
 		PageSize:       req.PageSize,
-		NextPageCursor: nextCursor,
+		NextPageCursor: page.NextPageCursor,
 	}, nil
 }
 
@@ -178,37 +165,6 @@ func buildEncryptedEvent(e *postgres.Event) (*datastore.EncryptedEvent, error) {
 		EventTime: timestamp,
 		Data:      e.Data,
 	}, nil
-}
-
-// encodeCursor returns either a marshalled cursor instance if there may be
-// more results to fetch (i.e. the number of events equals the page size), an
-// empty string if no results are possible (length of results is less than the
-// page size), or an error should we fail to generate the new cursor in any way.
-func encodeCursor(events []*datastore.EncryptedEvent, pageSize uint32, lastEventID int64) (string, error) {
-	if len(events) < int(pageSize) {
-		return "", nil
-	}
-	// there might be more so build a cursor based on the last event
-	lastEvent := events[len(events)-1]
-
-	// convert timestamp to time.Time
-	timestamp, err := ptypes.Timestamp(lastEvent.EventTime)
-	if err != nil {
-		return "", err
-	}
-
-	// create non-empty cursor meaning the requestor can look for more pages
-	c := &postgres.Cursor{
-		Timestamp: timestamp,
-		EventID:   lastEventID,
-	}
-
-	b, err := json.Marshal(c)
-	if err != nil {
-		return "", err
-	}
-
-	return base64.StdEncoding.EncodeToString(b), nil
 }
 
 // extractTimes extracts the start and end times from an incoming request,
