@@ -175,12 +175,6 @@ bin-clean: ## remove generated build artefacts
 
 .PHONY: psql
 psql: ## open psql shell
-	@docker-compose -f .docker-compose-$(ARCH).yml \
-		run \
-		--rm \
-		-e "PGHOST=postgres" \
-		-e "PGUSER=iotstore" \
-		-e "PGPASSWORD=password" \
-		postgres \
-		psql \
-		iotstore_development
+	@docker-compose -f .docker-compose-$(ARCH).yml start postgres
+	@sleep 1
+	@docker exec -it iotstore_postgres_1 psql -U iotstore iotstore_development

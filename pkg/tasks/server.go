@@ -18,16 +18,14 @@ import (
 func init() {
 	rootCmd.AddCommand(serverCmd)
 
-	serverCmd.Flags().StringP("addr", "a", "0.0.0.0:8080", "The address to which the server binds")
-	serverCmd.Flags().StringP("cert-file", "c", "", "The path to a TLS certificate file to enable TLS on the server")
-	serverCmd.Flags().StringP("key-file", "k", "", "The path to a TLS private key file to enable TLS on the server")
+	serverCmd.Flags().StringP("addr", "a", ":8080", "The address to which the server binds")
 	serverCmd.Flags().StringP("database-url", "d", "", "URL at which Postgres is listening (e.g. postgres://username:password@host:5432/dbname?sslmode=enable)")
+	serverCmd.Flags().StringSlice("domains", []string{}, "Comma separated list of domains we will obtain TLS certificates for")
 	serverCmd.Flags().Bool("verbose", false, "Enable verbose output")
 
 	viper.BindPFlag("addr", serverCmd.Flags().Lookup("addr"))
-	viper.BindPFlag("cert-file", serverCmd.Flags().Lookup("cert-file"))
-	viper.BindPFlag("key-file", serverCmd.Flags().Lookup("key-file"))
 	viper.BindPFlag("database-url", serverCmd.Flags().Lookup("database-url"))
+	viper.BindPFlag("domains", serverCmd.Flags().Lookup("domains"))
 	viper.BindPFlag("verbose", serverCmd.Flags().Lookup("verbose"))
 
 	raven.SetRelease(version.Version)
@@ -48,7 +46,14 @@ clients unable to use the Protocol Buffer API.
 
 Configuration values can be provided either by flags shown below, or via
 environment variables. If a flag is named: --example-flag, then it also be
-able to be supplied via an environment variable: $IOTSTORE_EXAMPLE_FLAG`,
+able to be supplied via an environment variable, i.e.: $IOTSTORE_EXAMPLE_FLAG
+
+The server natively supports TLS via LetsEncrypt so if any domain names are
+passed in via the domains flag, the server will attempt to obtain
+certificates for the given domains, and start in TLS mode. If this list is
+empty the server will start in non-TLS mode. Please note that the LetsEncrypt
+provided certificate handshake will only work if the server is running, and
+routable at the domains specified.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		addr := viper.GetString("addr")
 		if addr == "" {
@@ -65,11 +70,10 @@ able to be supplied via an environment variable: $IOTSTORE_EXAMPLE_FLAG`,
 		e := backoff.ExecuteFunc(func(_ context.Context) error {
 			s := server.NewServer(
 				&server.Config{
-					Addr:     addr,
-					ConnStr:  databaseURL,
-					Verbose:  viper.GetBool("verbose"),
-					CertFile: viper.GetString("cert-file"),
-					KeyFile:  viper.GetString("key-file"),
+					Addr:    addr,
+					ConnStr: databaseURL,
+					Verbose: viper.GetBool("verbose"),
+					Domains: viper.GetStringSlice("domains"),
 				},
 				logger,
 			)

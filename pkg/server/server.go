@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"time"
 
 	"github.com/DECODEproject/iotcommon/middleware"
@@ -17,6 +18,7 @@ import (
 	datastore "github.com/thingful/twirp-datastore-go"
 	goji "goji.io"
 	pat "goji.io/pat"
+	"golang.org/x/crypto/acme/autocert"
 
 	"github.com/DECODEproject/iotstore/pkg/postgres"
 	"github.com/DECODEproject/iotstore/pkg/rpc"
@@ -41,17 +43,17 @@ func init() {
 
 // Config is a struct used to pass in configuration from the calling task
 type Config struct {
-	Addr     string
-	ConnStr  string
-	Verbose  bool
-	CertFile string
-	KeyFile  string
+	Addr    string
+	ConnStr string
+	Verbose bool
+	Domains []string
 }
 
 // Server is our top level type, contains all other components, is responsible
 // for starting and stopping them in the correct order.
 type Server struct {
 	srv    *http.Server
+	db     *postgres.DB
 	ds     *rpc.Datastore
 	logger kitlog.Logger
 	config *Config
@@ -74,7 +76,9 @@ func PulseHandler(db *postgres.DB) http.Handler {
 
 // NewServer returns a new simple HTTP server.
 func NewServer(config *Config, logger kitlog.Logger) *Server {
-	ds := rpc.NewDatastore(config.ConnStr, config.Verbose, logger)
+	db := postgres.NewDB(config.ConnStr, config.Verbose, logger)
+
+	ds := rpc.NewDatastore(db, config.Verbose, logger)
 	hooks := twrpprom.NewServerHooks(registry.DefaultRegisterer)
 
 	twirpHandler := datastore.NewDatastoreServer(ds, hooks)
@@ -105,6 +109,7 @@ func NewServer(config *Config, logger kitlog.Logger) *Server {
 	// return the instantiated server
 	return &Server{
 		srv:    srv,
+		db:     db,
 		ds:     ds,
 		logger: kitlog.With(logger, "module", "server"),
 		config: config,
@@ -124,18 +129,22 @@ func (s *Server) Start() error {
 
 	go func() {
 		s.logger.Log(
-			"listenAddr",
-			s.srv.Addr,
-			"msg",
-			"starting server",
-			"pathPrefix",
-			datastore.DatastorePathPrefix,
-			"tlsEnabled",
-			isTLSEnabled(s.config),
+			"listenAddr", s.srv.Addr,
+			"msg", "starting server",
+			"pathPrefix", datastore.DatastorePathPrefix,
+			"domains", strings.Join(s.config.Domains, ","),
 		)
 
 		if isTLSEnabled(s.config) {
-			if err := s.srv.ListenAndServeTLS(s.config.CertFile, s.config.KeyFile); err != nil {
+			m := &autocert.Manager{
+				Cache:      s.db,
+				Prompt:     autocert.AcceptTOS,
+				HostPolicy: autocert.HostWhitelist(s.config.Domains...),
+			}
+
+			s.srv.TLSConfig = m.TLSConfig()
+
+			if err := s.srv.ListenAndServeTLS("", ""); err != nil {
 				s.logger.Log("err", err)
 				os.Exit(1)
 			}
@@ -168,5 +177,5 @@ func (s *Server) Stop() error {
 // isTLSEnabled returns true if the passed in configuration object contains both
 // a cert and key file paths, false otherwise.
 func isTLSEnabled(config *Config) bool {
-	return config.CertFile != "" && config.KeyFile != ""
+	return len(config.Domains) > 0
 }

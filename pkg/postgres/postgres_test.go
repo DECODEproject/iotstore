@@ -1,6 +1,7 @@
 package postgres_test
 
 import (
+	"context"
 	"os"
 	"testing"
 	"time"
@@ -8,6 +9,7 @@ import (
 	kitlog "github.com/go-kit/kit/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+	"golang.org/x/crypto/acme/autocert"
 
 	"github.com/DECODEproject/iotstore/pkg/postgres"
 )
@@ -45,34 +47,46 @@ func (s *PostgresSuite) TearDownTest() {
 	s.db.Stop()
 }
 
-func (s *PostgresSuite) TestRoundTrip() {
+func (s *PostgresSuite) TestRoundTripEvent() {
 	startTime := time.Now().Add(time.Hour * -1)
 	policyId := "abc123"
 	deviceToken := "device-token"
 
 	err := s.db.WriteData(policyId, []byte("encrypted bytes"), deviceToken)
 	assert.Nil(s.T(), err)
-
-	events, err := s.db.ReadData(policyId, 50, startTime, time.Time{}, "")
+	err = s.db.WriteData(policyId, []byte("encrypted bytes"), deviceToken)
 	assert.Nil(s.T(), err)
-	assert.Len(s.T(), events, 1)
+	err = s.db.WriteData(policyId, []byte("encrypted bytes"), deviceToken)
+	assert.Nil(s.T(), err)
+	err = s.db.WriteData(policyId, []byte("encrypted bytes"), deviceToken)
+	assert.Nil(s.T(), err)
 
-	event := events[0]
+	page, err := s.db.ReadData(policyId, 3, startTime, time.Time{}, "")
+	assert.Nil(s.T(), err)
+	assert.Len(s.T(), page.Events, 3)
+	assert.NotEqual(s.T(), "", page.NextPageCursor)
+
+	event := page.Events[0]
 	assert.Equal(s.T(), []byte("encrypted bytes"), event.Data)
+
+	// get next page
+	page, err = s.db.ReadData(policyId, 3, startTime, time.Time{}, page.NextPageCursor)
+	assert.Nil(s.T(), err)
+	assert.Len(s.T(), page.Events, 1)
 
 	err = s.db.DeleteData(time.Now(), false)
 	assert.Nil(s.T(), err)
 
-	events, err = s.db.ReadData(policyId, 50, startTime, time.Time{}, "")
+	page, err = s.db.ReadData(policyId, 50, startTime, time.Time{}, "")
 	assert.Nil(s.T(), err)
-	assert.Len(s.T(), events, 1)
+	assert.Len(s.T(), page.Events, 4)
 
 	err = s.db.DeleteData(time.Now(), true)
 	assert.Nil(s.T(), err)
 
-	events, err = s.db.ReadData(policyId, 50, startTime, time.Time{}, "")
+	page, err = s.db.ReadData(policyId, 50, startTime, time.Time{}, "")
 	assert.Nil(s.T(), err)
-	assert.Len(s.T(), events, 0)
+	assert.Len(s.T(), page.Events, 0)
 }
 
 func (s *PostgresSuite) TestReadWithEndTime() {
@@ -84,14 +98,41 @@ func (s *PostgresSuite) TestReadWithEndTime() {
 	err := s.db.WriteData(policyId, []byte("encrypted bytes"), deviceToken)
 	assert.Nil(s.T(), err)
 
-	events, err := s.db.ReadData(policyId, 50, startTime, endTime, "")
+	page, err := s.db.ReadData(policyId, 50, startTime, endTime, "")
 	assert.Nil(s.T(), err)
-	assert.Len(s.T(), events, 0)
+	assert.Len(s.T(), page.Events, 0)
 }
 
 func (s *PostgresSuite) TestPing() {
 	err := s.db.Ping()
 	assert.Nil(s.T(), err)
+}
+
+func (s *PostgresSuite) TestCertificates() {
+	ctx := context.Background()
+
+	// nonexistent key should return error
+	_, err := s.db.Get(ctx, "baz")
+	assert.NotNil(s.T(), err)
+	assert.Equal(s.T(), autocert.ErrCacheMiss, err)
+
+	// should be able to write a cert
+	err = s.db.Put(ctx, "foo", []byte("bar"))
+	assert.Nil(s.T(), err)
+
+	// now should be able to read it
+	cert, err := s.db.Get(ctx, "foo")
+	assert.Nil(s.T(), err)
+	assert.Equal(s.T(), []byte("bar"), cert)
+
+	// should be able to delete it
+	err = s.db.Delete(ctx, "foo")
+	assert.Nil(s.T(), err)
+
+	// now should not be able to read it
+	_, err = s.db.Get(ctx, "foo")
+	assert.NotNil(s.T(), err)
+	assert.Equal(s.T(), autocert.ErrCacheMiss, err)
 }
 
 func TestPostgresSuite(t *testing.T) {

@@ -94,11 +94,22 @@ required.
 
 **Configuration for `server` command**
 
-| Flag                 | Environment Variable  | Description                                      | Default value | Required |
-| -------------------- | --------------------- | ------------------------------------------------ | ------------- | -------- |
-| --addr or -a         | IOTSTORE_ADDR         | The address to which the server binds            | 0.0.0.0:8080  | No       |
-| --cert-file or -c    | IOTSTORE_CERT_FILE    | The path to a TLS certificate file to enable TLS |               | No       |
-| --key-file or -k     | IOTSTORE_KEY_FILE     | The path to a TLS key file to enable TLS         |               | No       |
-| --verbose            | IOTSTORE_VERBOSE      | Flag that if set enables verbose mode            | False         | No       |
-| --database-url or -d | IOTSTORE_DATABASE_URL | Connection string for Postgres database          |               | Yes      |
-|                      | SENTRY_DSN            | Optional DSN string for Sentry error reporting   |               | No       |
+| Flag                 | Environment Variable  | Description                                                      | Default value | Required |
+| -------------------- | --------------------- | ---------------------------------------------------------------- | ------------- | -------- |
+| --addr or -a         | IOTSTORE_ADDR         | The address to which the server binds                            | 0.0.0.0:8080  | No       |
+| --domains            | IOTSTORE_DOMAINS      | Comma separated list of domains at which the server is reachable |               | No       |
+| --verbose            | IOTSTORE_VERBOSE      | Flag that if set enables verbose mode                            | False         | No       |
+| --database-url or -d | IOTSTORE_DATABASE_URL | Connection string for Postgres database                          |               | Yes      |
+|                      | SENTRY_DSN            | Optional DSN string for Sentry error reporting                   |               | No       |
+
+Note, including the `domains` configuration property implies that the server
+should deploy and run using LetsEncrypt to automatically obtain a valid
+certificate. This requires that the server be reachable on all the domains
+specified by this property, and that it has been configured to listen on the
+standard HTTPS port of 443.
+
+An example might be:
+
+```bash
+$ iotstore server --domains=iotstore.decode.smartcitizen.me --addr=:443
+```
