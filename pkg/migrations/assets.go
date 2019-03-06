@@ -211,7 +211,7 @@ func _20190227121312_create_cert_cacheDownSql() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "20190227121312_create_cert_cache.down.sql", size: 34, mode: os.FileMode(420), modTime: time.Unix(1551269887, 0)}
+	info := bindataFileInfo{name: "20190227121312_create_cert_cache.down.sql", size: 34, mode: os.FileMode(420), modTime: time.Unix(1551869802, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0x3d, 0x85, 0xef, 0x15, 0xa1, 0x51, 0x74, 0x22, 0x6b, 0x2f, 0xde, 0x28, 0x99, 0xb5, 0x60, 0xd6, 0xe8, 0x10, 0x23, 0xa7, 0x48, 0x63, 0xf2, 0xc4, 0x3c, 0xca, 0x83, 0x1f, 0xb4, 0x65, 0xad, 0x98}}
 	return a, nil
 }
@@ -231,7 +231,7 @@ func _20190227121312_create_cert_cacheUpSql() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "20190227121312_create_cert_cache.up.sql", size: 106, mode: os.FileMode(420), modTime: time.Unix(1551269868, 0)}
+	info := bindataFileInfo{name: "20190227121312_create_cert_cache.up.sql", size: 106, mode: os.FileMode(420), modTime: time.Unix(1551869802, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0x66, 0x3c, 0x3, 0x6a, 0x8c, 0x5a, 0x0, 0xe2, 0xca, 0x24, 0x4b, 0xf0, 0x4b, 0x55, 0xb2, 0xc4, 0x3f, 0x19, 0x75, 0x20, 0x4f, 0xd3, 0x4d, 0xc6, 0xa6, 0x9b, 0xbb, 0xc1, 0x94, 0x70, 0xbc, 0x38}}
 	return a, nil
 }
