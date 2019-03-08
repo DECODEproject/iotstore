@@ -70,8 +70,8 @@ func (d *Datastore) Stop() error {
 // the incoming request object is valid, then an event will be written into the
 // database. Any invalid data will return an error.
 func (d *Datastore) WriteData(ctx context.Context, req *datastore.WriteRequest) (*datastore.WriteResponse, error) {
-	if req.PolicyId == "" {
-		return nil, twirp.RequiredArgumentError("policy_id")
+	if req.CommunityId == "" {
+		return nil, twirp.RequiredArgumentError("community_id")
 	}
 
 	if req.DeviceToken == "" {
@@ -80,14 +80,14 @@ func (d *Datastore) WriteData(ctx context.Context, req *datastore.WriteRequest) 
 
 	if d.verbose {
 		d.logger.Log(
-			"policyId", req.PolicyId,
+			"communityId", req.CommunityId,
 			"deviceToken", req.DeviceToken,
 			"msg", "WriteData",
 			"encodedPayload", string(req.Data),
 		)
 	}
 
-	err := d.DB.WriteData(req.PolicyId, req.Data, req.DeviceToken)
+	err := d.DB.WriteData(req.CommunityId, req.Data, req.DeviceToken)
 	if err != nil {
 		raven.CaptureError(err, map[string]string{"operation": "writeData"})
 		return nil, twirp.InternalErrorWith(errors.Cause(err))
@@ -100,8 +100,8 @@ func (d *Datastore) WriteData(ctx context.Context, req *datastore.WriteRequest) 
 // datastore matching search parameters defined in the incoming
 // datastore.ReadRequest object.
 func (d *Datastore) ReadData(ctx context.Context, req *datastore.ReadRequest) (*datastore.ReadResponse, error) {
-	if req.PolicyId == "" {
-		return nil, twirp.RequiredArgumentError("policy_id")
+	if req.CommunityId == "" {
+		return nil, twirp.RequiredArgumentError("community_id")
 	}
 
 	if req.PageSize == 0 {
@@ -120,14 +120,14 @@ func (d *Datastore) ReadData(ctx context.Context, req *datastore.ReadRequest) (*
 	if d.verbose {
 		d.logger.Log(
 			"msg", "ReadData",
-			"policyId", req.PolicyId,
+			"communityId", req.CommunityId,
 			"pageSize", req.PageSize,
 			"startTime", startTime,
 			"endTime", endTime,
 		)
 	}
 
-	page, err := d.DB.ReadData(req.PolicyId, uint64(req.PageSize), startTime, endTime, req.PageCursor)
+	page, err := d.DB.ReadData(req.CommunityId, uint64(req.PageSize), startTime, endTime, req.PageCursor)
 	if err != nil {
 		raven.CaptureError(err, map[string]string{"operation": "readData"})
 		return nil, twirp.InternalErrorWith(errors.Cause(err))
@@ -146,7 +146,7 @@ func (d *Datastore) ReadData(ctx context.Context, req *datastore.ReadRequest) (*
 	}
 
 	return &datastore.ReadResponse{
-		PolicyId:       req.PolicyId,
+		CommunityId:    req.CommunityId,
 		Events:         events,
 		PageSize:       req.PageSize,
 		NextPageCursor: page.NextPageCursor,

@@ -54,26 +54,26 @@ func (s *DatastoreSuite) TearDownTest() {
 }
 
 func (s *DatastoreSuite) TestRoundTrip() {
-	policyID := "abc123"
+	communityID := "abc123"
 	deviceToken := "device-token"
 
 	startTime, err := ptypes.TimestampProto(time.Now().Add(time.Hour * -1))
 	assert.Nil(s.T(), err)
 
 	_, err = s.ds.WriteData(context.Background(), &datastore.WriteRequest{
-		PolicyId:    policyID,
+		CommunityId: communityID,
 		Data:        []byte("hello world"),
 		DeviceToken: deviceToken,
 	})
 	assert.Nil(s.T(), err)
 
 	resp, err := s.ds.ReadData(context.Background(), &datastore.ReadRequest{
-		PolicyId:  policyID,
-		StartTime: startTime,
+		CommunityId: communityID,
+		StartTime:   startTime,
 	})
 
 	assert.Nil(s.T(), err)
-	assert.Equal(s.T(), policyID, resp.PolicyId)
+	assert.Equal(s.T(), communityID, resp.CommunityId)
 	assert.Len(s.T(), resp.Events, 1)
 	assert.Equal(s.T(), int(rpc.DefaultPageSize), int(resp.PageSize))
 	assert.Equal(s.T(), "", resp.NextPageCursor)
@@ -89,13 +89,13 @@ func (s *DatastoreSuite) TestWriteDataInvalid() {
 		expectedError string
 	}{
 		{
-			label:         "missing policy_id",
+			label:         "missing community_id",
 			request:       &datastore.WriteRequest{DeviceToken: "device-token"},
-			expectedError: "twirp error invalid_argument: policy_id is required",
+			expectedError: "twirp error invalid_argument: community_id is required",
 		},
 		{
 			label:         "missing device_token",
-			request:       &datastore.WriteRequest{PolicyId: "abc123"},
+			request:       &datastore.WriteRequest{CommunityId: "abc123"},
 			expectedError: "twirp error invalid_argument: device_token is required",
 		},
 	}
@@ -120,34 +120,34 @@ func (s *DatastoreSuite) TestReadDataInvalid() {
 		expectedError string
 	}{
 		{
-			label: "missing policy_id",
+			label: "missing community_id",
 			request: &datastore.ReadRequest{
 				StartTime: startTime,
 			},
-			expectedError: "twirp error invalid_argument: policy_id is required",
+			expectedError: "twirp error invalid_argument: community_id is required",
 		},
 		{
 			label: "large page size",
 			request: &datastore.ReadRequest{
-				PolicyId:  "123abc",
-				StartTime: startTime,
-				PageSize:  1001,
+				CommunityId: "123abc",
+				StartTime:   startTime,
+				PageSize:    1001,
 			},
 			expectedError: "twirp error invalid_argument: page_size must be between 1 and 1000",
 		},
 		{
 			label: "missing start time",
 			request: &datastore.ReadRequest{
-				PolicyId: "123abc",
+				CommunityId: "123abc",
 			},
 			expectedError: "twirp error invalid_argument: start_time is required",
 		},
 		{
 			label: "end_time before start_time",
 			request: &datastore.ReadRequest{
-				PolicyId:  "123abc",
-				StartTime: startTime,
-				EndTime:   invalidEndTime,
+				CommunityId: "123abc",
+				StartTime:   startTime,
+				EndTime:     invalidEndTime,
 			},
 			expectedError: "twirp error invalid_argument: end_time must be after start_time",
 		},
@@ -172,39 +172,39 @@ func (s *DatastoreSuite) TestPagination() {
 	deviceToken := "device-token"
 
 	fixtures := []struct {
-		policyID  string
-		timestamp string
-		data      []byte
+		communityID string
+		timestamp   string
+		data        []byte
 	}{
 		{
-			policyID:  "abc123",
-			timestamp: "2018-05-01T07:59:59",
-			data:      []byte("first"),
+			communityID: "abc123",
+			timestamp:   "2018-05-01T07:59:59",
+			data:        []byte("first"),
 		},
 		{
-			policyID:  "abc123",
-			timestamp: "2018-05-01T08:00:00Z",
-			data:      []byte("first"),
+			communityID: "abc123",
+			timestamp:   "2018-05-01T08:00:00Z",
+			data:        []byte("first"),
 		},
 		{
-			policyID:  "abc123",
-			timestamp: "2018-05-01T08:02:00Z",
-			data:      []byte("third"),
+			communityID: "abc123",
+			timestamp:   "2018-05-01T08:02:00Z",
+			data:        []byte("third"),
 		},
 		{
-			policyID:  "abc123",
-			timestamp: "2018-05-01T08:01:00Z",
-			data:      []byte("second"),
+			communityID: "abc123",
+			timestamp:   "2018-05-01T08:01:00Z",
+			data:        []byte("second"),
 		},
 		{
-			policyID:  "abc123",
-			timestamp: "2018-05-01T08:02:00Z",
-			data:      []byte("fourth"),
+			communityID: "abc123",
+			timestamp:   "2018-05-01T08:02:00Z",
+			data:        []byte("fourth"),
 		},
 		{
-			policyID:  "abc123",
-			timestamp: "2018-05-01T08:04:00Z",
-			data:      []byte("fourth"),
+			communityID: "abc123",
+			timestamp:   "2018-05-01T08:04:00Z",
+			data:        []byte("fourth"),
 		},
 	}
 
@@ -212,18 +212,18 @@ func (s *DatastoreSuite) TestPagination() {
 	for _, f := range fixtures {
 		ts, _ := time.Parse(time.RFC3339, f.timestamp)
 
-		s.ds.DB.DB.MustExec("INSERT INTO events (policy_id, recorded_at, data, device_token) VALUES ($1, $2, $3, $4)", f.policyID, ts, f.data, deviceToken)
+		s.ds.DB.DB.MustExec("INSERT INTO events (community_id, recorded_at, data, device_token) VALUES ($1, $2, $3, $4)", f.communityID, ts, f.data, deviceToken)
 	}
 
 	resp, err := s.ds.ReadData(context.Background(), &datastore.ReadRequest{
-		PolicyId:  "abc123",
-		PageSize:  3,
-		StartTime: startTimestamp,
-		EndTime:   endTimestamp,
+		CommunityId: "abc123",
+		PageSize:    3,
+		StartTime:   startTimestamp,
+		EndTime:     endTimestamp,
 	})
 
 	assert.Nil(s.T(), err)
-	assert.Equal(s.T(), "abc123", resp.PolicyId)
+	assert.Equal(s.T(), "abc123", resp.CommunityId)
 	assert.Len(s.T(), resp.Events, 3)
 	assert.NotEqual(s.T(), "", resp.NextPageCursor)
 
@@ -232,11 +232,11 @@ func (s *DatastoreSuite) TestPagination() {
 	assert.Equal(s.T(), "third", string(resp.Events[2].Data))
 
 	resp, err = s.ds.ReadData(context.Background(), &datastore.ReadRequest{
-		PolicyId:   "abc123",
-		PageSize:   3,
-		PageCursor: resp.NextPageCursor,
-		StartTime:  startTimestamp,
-		EndTime:    endTimestamp,
+		CommunityId: "abc123",
+		PageSize:    3,
+		PageCursor:  resp.NextPageCursor,
+		StartTime:   startTimestamp,
+		EndTime:     endTimestamp,
 	})
 
 	assert.Nil(s.T(), err)
