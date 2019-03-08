@@ -106,13 +106,13 @@ func (d *DB) Stop() error {
 // database. Takes as input the id of the policy the policy for which we are
 // storing data and a byte slice containing the encrypted data to be persisted.
 // In addition we also pass in the unique device token.
-func (d *DB) WriteData(policyId string, data []byte, deviceToken string) error {
+func (d *DB) WriteData(communityId string, data []byte, deviceToken string) error {
 	sql := `INSERT INTO events
-		(policy_id, data, device_token)
-		VALUES (:policy_id, :data, :device_token)`
+		(community_id, data, device_token)
+		VALUES (:community_id, :data, :device_token)`
 
 	mapArgs := map[string]interface{}{
-		"policy_id":    policyId,
+		"community_id": communityId,
 		"data":         data,
 		"device_token": deviceToken,
 	}
@@ -140,12 +140,12 @@ func (d *DB) WriteData(policyId string, data []byte, deviceToken string) error {
 }
 
 // ReadData returns a list of Event types for the given query parameters.
-func (d *DB) ReadData(policyId string, pageSize uint64, startTime, endTime time.Time, pageCursor string) (*Page, error) {
+func (d *DB) ReadData(communityId string, pageSize uint64, startTime, endTime time.Time, pageCursor string) (*Page, error) {
 	// use sqrl builder here as it simplifies the creation of the query.
 	builder := sq.Select("id", "recorded_at", "data").
 		From("events").
 		OrderBy("recorded_at ASC", "id ASC").
-		Where(sq.Eq{"policy_id": policyId}).
+		Where(sq.Eq{"community_id": communityId}).
 		Where(sq.GtOrEq{"recorded_at": startTime}).
 		Limit(pageSize)
 

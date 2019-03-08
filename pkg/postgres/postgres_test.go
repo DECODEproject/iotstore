@@ -49,19 +49,19 @@ func (s *PostgresSuite) TearDownTest() {
 
 func (s *PostgresSuite) TestRoundTripEvent() {
 	startTime := time.Now().Add(time.Hour * -1)
-	policyId := "abc123"
+	communityId := "abc123"
 	deviceToken := "device-token"
 
-	err := s.db.WriteData(policyId, []byte("encrypted bytes"), deviceToken)
+	err := s.db.WriteData(communityId, []byte("encrypted bytes"), deviceToken)
 	assert.Nil(s.T(), err)
-	err = s.db.WriteData(policyId, []byte("encrypted bytes"), deviceToken)
+	err = s.db.WriteData(communityId, []byte("encrypted bytes"), deviceToken)
 	assert.Nil(s.T(), err)
-	err = s.db.WriteData(policyId, []byte("encrypted bytes"), deviceToken)
+	err = s.db.WriteData(communityId, []byte("encrypted bytes"), deviceToken)
 	assert.Nil(s.T(), err)
-	err = s.db.WriteData(policyId, []byte("encrypted bytes"), deviceToken)
+	err = s.db.WriteData(communityId, []byte("encrypted bytes"), deviceToken)
 	assert.Nil(s.T(), err)
 
-	page, err := s.db.ReadData(policyId, 3, startTime, time.Time{}, "")
+	page, err := s.db.ReadData(communityId, 3, startTime, time.Time{}, "")
 	assert.Nil(s.T(), err)
 	assert.Len(s.T(), page.Events, 3)
 	assert.NotEqual(s.T(), "", page.NextPageCursor)
@@ -70,21 +70,21 @@ func (s *PostgresSuite) TestRoundTripEvent() {
 	assert.Equal(s.T(), []byte("encrypted bytes"), event.Data)
 
 	// get next page
-	page, err = s.db.ReadData(policyId, 3, startTime, time.Time{}, page.NextPageCursor)
+	page, err = s.db.ReadData(communityId, 3, startTime, time.Time{}, page.NextPageCursor)
 	assert.Nil(s.T(), err)
 	assert.Len(s.T(), page.Events, 1)
 
 	err = s.db.DeleteData(time.Now(), false)
 	assert.Nil(s.T(), err)
 
-	page, err = s.db.ReadData(policyId, 50, startTime, time.Time{}, "")
+	page, err = s.db.ReadData(communityId, 50, startTime, time.Time{}, "")
 	assert.Nil(s.T(), err)
 	assert.Len(s.T(), page.Events, 4)
 
 	err = s.db.DeleteData(time.Now(), true)
 	assert.Nil(s.T(), err)
 
-	page, err = s.db.ReadData(policyId, 50, startTime, time.Time{}, "")
+	page, err = s.db.ReadData(communityId, 50, startTime, time.Time{}, "")
 	assert.Nil(s.T(), err)
 	assert.Len(s.T(), page.Events, 0)
 }
@@ -92,13 +92,13 @@ func (s *PostgresSuite) TestRoundTripEvent() {
 func (s *PostgresSuite) TestReadWithEndTime() {
 	startTime := time.Now().Add(time.Hour * -1)
 	endTime := time.Now().Add(time.Minute * -30)
-	policyId := "abc123"
+	communityId := "abc123"
 	deviceToken := "device-token"
 
-	err := s.db.WriteData(policyId, []byte("encrypted bytes"), deviceToken)
+	err := s.db.WriteData(communityId, []byte("encrypted bytes"), deviceToken)
 	assert.Nil(s.T(), err)
 
-	page, err := s.db.ReadData(policyId, 50, startTime, endTime, "")
+	page, err := s.db.ReadData(communityId, 50, startTime, endTime, "")
 	assert.Nil(s.T(), err)
 	assert.Len(s.T(), page.Events, 0)
 }
