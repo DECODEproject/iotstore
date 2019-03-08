@@ -253,7 +253,7 @@ func _20190308140100_rename_policy_idDownSql() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "20190308140100_rename_policy_id.down.sql", size: 130, mode: os.FileMode(420), modTime: time.Unix(1552053742, 0)}
+	info := bindataFileInfo{name: "20190308140100_rename_policy_id.down.sql", size: 130, mode: os.FileMode(420), modTime: time.Unix(1552055349, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0xfe, 0x77, 0xd5, 0xfd, 0x1e, 0x99, 0xba, 0xcc, 0xef, 0xcf, 0x6c, 0xce, 0x53, 0x5b, 0x69, 0xcf, 0xf7, 0xbb, 0xb3, 0xca, 0x2b, 0x27, 0xf4, 0xe0, 0xec, 0xd5, 0x88, 0x80, 0x7d, 0x5c, 0x5c, 0x9d}}
 	return a, nil
 }
@@ -273,7 +273,7 @@ func _20190308140100_rename_policy_idUpSql() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "20190308140100_rename_policy_id.up.sql", size: 130, mode: os.FileMode(420), modTime: time.Unix(1552053705, 0)}
+	info := bindataFileInfo{name: "20190308140100_rename_policy_id.up.sql", size: 130, mode: os.FileMode(420), modTime: time.Unix(1552055349, 0)}
 	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0x54, 0x81, 0x78, 0x2b, 0x5c, 0x81, 0x33, 0xae, 0xbf, 0x41, 0x8a, 0x4e, 0x92, 0xeb, 0xec, 0x60, 0x4a, 0x3b, 0x64, 0x1f, 0xd1, 0xe, 0xa4, 0x21, 0xe4, 0x36, 0xcf, 0x5f, 0x24, 0x44, 0xb1, 0x71}}
 	return a, nil
 }
