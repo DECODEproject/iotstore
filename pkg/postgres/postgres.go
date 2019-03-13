@@ -266,6 +266,13 @@ func (d *DB) Ping() error {
 // Get is our implementation of the method defined in the autocert.Cache
 // interface for reading certificates from some underlying datastore.
 func (d *DB) Get(ctx context.Context, key string) ([]byte, error) {
+	if d.verbose {
+		d.logger.Log(
+			"msg", "get certificate",
+			"key", key,
+		)
+	}
+
 	query := `SELECT certificate FROM certificates WHERE key = $1`
 
 	var certificate []byte
@@ -284,6 +291,13 @@ func (d *DB) Get(ctx context.Context, key string) ([]byte, error) {
 // Put is our implementation of the method defined in the autocert.Cache
 // interface for writing certificates to some underlying datastore.
 func (d *DB) Put(ctx context.Context, key string, data []byte) error {
+	if d.verbose {
+		d.logger.Log(
+			"msg", "putting certificate",
+			"key", key,
+		)
+	}
+
 	sql := `INSERT INTO certificates (key, certificate)
 		VALUES (:key, :certificate)
 	ON CONFLICT (key)
@@ -320,6 +334,13 @@ func (d *DB) Put(ctx context.Context, key string, data []byte) error {
 // Delete is our implementation of the autocert.Cache interface for deleting
 // certificates from some underlying datastore.
 func (d *DB) Delete(ctx context.Context, key string) error {
+	if d.verbose {
+		d.logger.Log(
+			"msg", "deleting certificate",
+			"key", key,
+		)
+	}
+
 	sql := `DELETE FROM certificates WHERE key = $1`
 
 	tx, err := d.DB.Beginx()
