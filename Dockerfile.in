@@ -2,6 +2,10 @@ FROM ARG_FROM
 
 MAINTAINER Thingful <info@thingful.net>
 
+RUN apk add --no-cache \
+  ca-certificates && \
+  update-ca-certificates
+
 ADD bin/ARG_ARCH/ARG_BIN /ARG_BIN
 
 USER nobody:nobody
