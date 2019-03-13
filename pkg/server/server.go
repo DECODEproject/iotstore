@@ -133,6 +133,7 @@ func (s *Server) Start() error {
 			"msg", "starting server",
 			"pathPrefix", datastore.DatastorePathPrefix,
 			"domains", strings.Join(s.config.Domains, ","),
+			"tlsEnabled", isTLSEnabled(s.config),
 		)
 
 		if isTLSEnabled(s.config) {
