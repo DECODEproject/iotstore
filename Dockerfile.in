@@ -1,12 +1,17 @@
-FROM ARG_FROM
+FROM alpine:latest AS certs
 
-MAINTAINER Thingful <info@thingful.net>
-
-RUN apk add --no-cache \
+RUN apk add --update --no-cache \
   ca-certificates && \
   update-ca-certificates
 
+FROM ARG_FROM
+
+LABEL maintainer="info@thingful.net"
+LABEL description="Datastore for DECODE IoT Pilot"
+
+COPY --from=certs /etc/ssl/certs /etc/ssl/certs
+
 ADD bin/ARG_ARCH/ARG_BIN /ARG_BIN
 
-USER nobody:nobody
+USER nobody:nogroup
 ENTRYPOINT ["/ARG_BIN"]
