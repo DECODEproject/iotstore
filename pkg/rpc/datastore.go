@@ -108,7 +108,7 @@ func (d *Datastore) ReadData(ctx context.Context, req *datastore.ReadRequest) (*
 		req.PageSize = DefaultPageSize
 	}
 
-	if req.PageSize < 0 || req.PageSize > MaxPageSize {
+	if req.PageSize > MaxPageSize {
 		return nil, twirp.InvalidArgumentError("page_size", fmt.Sprintf("must be between 1 and %v", MaxPageSize))
 	}
 
